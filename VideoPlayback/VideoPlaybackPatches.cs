@@ -1,6 +1,8 @@
 using System.IO;
 using HarmonyLib;
 using Rhythm;
+using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Video;
 
 namespace UNANIMATED.VideoPlayback
@@ -18,8 +20,12 @@ namespace UNANIMATED.VideoPlayback
                 if (progression.customVideoPath != null && File.Exists(progression.customVideoPath) && UNANIMATED.effectsEnabled)
                 {
                     UNANIMATED.Logger.LogInfo("Custom video found and video playback is enabled! Playing video.");
-                    __instance.ResetMaskUpdate();
 
+                    // Set shader
+                    VideoPlaybackController.FixVideoPlayer(__instance.transform.Find("Video Player").gameObject);
+
+
+                    __instance.ResetMaskUpdate();
                     __instance.video.source = VideoSource.Url;
                     __instance.video.url = "file:///" + progression.customVideoPath.Replace("\\", "/");
                     __instance.video.Play();

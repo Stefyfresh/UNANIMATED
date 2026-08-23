@@ -4,11 +4,17 @@ namespace UNANIMATED
 {
     public class CommandEventInfo : Rhythm.EventInfo
     {
+        private string[] paramArray;
         public CommandEventInfo(Rhythm.EventInfo info)
         {
             eventType = info.eventType;
             startTime = info.startTime;
             eventParams = info.eventParams;
+
+            eventType ??= string.Empty;
+            eventParams ??= [];
+
+            paramArray = HasEndTime ? eventParams[1].Split(':') : eventParams[0].Split(':');
         }
 
 
@@ -33,7 +39,11 @@ namespace UNANIMATED
 
         public string[] Parameters
         {
-            get { return HasEndTime ? eventParams[1].Split(':') : eventParams[0].Split(':'); }
+            get { return paramArray; }
+        }
+        public string ParamString
+        {
+            get { return string.Join(",", Parameters); }
         }
 
         public int Time
@@ -46,26 +56,20 @@ namespace UNANIMATED
 
         public float GetFloatParam(int index)
         {
-            if (HasEndTime)
-            {
-                return float.TryParse(eventParams[1].Split(':')[index], out float parsed) ? parsed : 0;
-            }
-            else
-            {
-                return float.TryParse(eventParams[0].Split(':')[index], out float parsed) ? parsed : 0;
-            }
+            return float.TryParse(GetStringParam(index), out float parsed) ? parsed : 0;
         }
 
         public string GetStringParam(int index)
         {
-            if (HasEndTime)
-            {
-                return eventParams[1].Split(':').ElementAtOrDefault(index);
-            }
-            else
-            {
-                return eventParams[0].Split(':').ElementAtOrDefault(index);
-            }
+            string output = paramArray.ElementAtOrDefault(index);
+            output ??= string.Empty;
+            if (output != string.Empty) output = output.Trim();
+            return output;
+        }
+
+        public bool GetBoolParam(int index)
+        {
+            return !bool.TryParse(GetStringParam(index), out bool parsed) || parsed;
         }
 
         public bool CommandsEqual(CommandEventInfo compare)

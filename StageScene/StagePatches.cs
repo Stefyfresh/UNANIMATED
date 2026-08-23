@@ -6,20 +6,20 @@ using Rhythm;
 
 namespace UNANIMATED.StageScene
 {
-    [HarmonyPatch(typeof(BeatmapParserEngine))]
-    [HarmonyPatch("ParseLineGeneral")]
-    internal class ParseLineGeneralPatch
-    {
-        static void Postfix(string line)
-        {
-            string[] array = line.Split(':');
+    // [HarmonyPatch(typeof(BeatmapParserEngine))]
+    // [HarmonyPatch("ParseLineGeneral")]
+    // internal class ParseLineGeneralPatch
+    // {
+    //     static void Postfix(string line)
+    //     {
+    //         string[] array = line.Split(':');
 
-            if (array[0] == "DefaultStageScene")
-            {
-                UNANIMATED.defaultStageScene = array[1].Trim();
-            }
-        }
-    }
+    //         if (array[0] == "DefaultStageScene")
+    //         {
+    //             UNANIMATED.defaultStageScene = array[1].Trim();
+    //         }
+    //     }
+    // }
 
 
 
@@ -85,4 +85,16 @@ namespace UNANIMATED.StageScene
     //         if (song.stageScene != "TrainStationRhythm" && song.)
     //     }
     // }
+
+
+    [HarmonyPatch(typeof(LevelManager))]
+    [HarmonyPatch("OnSceneLoaded")]
+    internal class OnSceneLoadedPatch
+    {
+        static void Postfix()
+        {
+            // if (song.stageScene != "TrainStationRhythm" && song.)
+            if (SceneController.preloadingScenes && LevelManager.sceneHasLoaded == true) LevelManager.sceneHasLoaded = false;
+        }
+    }
 }

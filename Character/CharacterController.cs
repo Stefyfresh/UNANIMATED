@@ -48,7 +48,7 @@ namespace UNANIMATED.Character
 
 
 
-        public static void ParseCharacterCommand(CommandEventInfo currentCommand)
+        public static void ParseCommand(CommandEventInfo currentCommand)
         {
             // Get relevant variables
             CharacterOverride type = System.Enum.Parse<CharacterOverride>(currentCommand.GetStringParam(0));

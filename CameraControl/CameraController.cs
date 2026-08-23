@@ -9,7 +9,7 @@ namespace UNANIMATED.CameraControl
         public static Vector3 leftCameraPeekOffset = new(-1f, 0, 0.5f);
         public static Vector3 rightCameraPeekOffset = new(1f, 0, 0.5f);
         public static float cameraEaseTime = CameraDefaults.cameraEaseTime;
-        public static Ease cameraEaseMode = Ease.OutQuad;
+        public static Ease cameraEaseMode = Ease.OutQuint;
         public static float cameraFOV = CameraDefaults.cameraFOV;
         public static float cameraFOVTarget = CameraDefaults.cameraFOV;
         public static float cameraFOVTime;
@@ -28,7 +28,7 @@ namespace UNANIMATED.CameraControl
         }
 
 
-        public static void ParseCameraCommand(HitObjectInfo currentCommand)
+        public static void ParseCommand(HitObjectInfo currentCommand)
         {
             // Get relevant variables
             CameraOverride type = (CameraOverride)int.Parse(currentCommand.hitSample[0]);
@@ -117,6 +117,10 @@ namespace UNANIMATED.CameraControl
                                 case CameraOverride.FOVOffset:
                                     RhythmCameraHelpers.SetFOVOffset(secondData, time);
                                     break;
+
+                                case CameraOverride.Shake:
+                                    RhythmCameraHelpers.Shake(time, secondData, secondData);
+                                    break;
                             }
 
                         }
@@ -171,6 +175,9 @@ namespace UNANIMATED.CameraControl
                                 case CameraOverride.FOVOffset:
                                     RhythmCameraHelpers.SetFOVOffsetImmediate(secondData);
                                     break;
+                                case CameraOverride.Shake:
+                                    RhythmCameraHelpers.Shake(0, secondData, secondData);
+                                    break;
                             }
                         }
                     }
@@ -182,9 +189,8 @@ namespace UNANIMATED.CameraControl
 
         public static void DoFixedUpdate(RhythmCamera instance)
         {
-            instance.UpdatePositionTarget();
-
-            if (UNANIMATED.effectsEnabled && (cameraEaseMode != CameraDefaults.cameraEaseMode || cameraEaseTime != CameraDefaults.cameraEaseTime))
+            RhythmCameraUpdatePositionTarget(instance);
+            if (UNANIMATED.effectsEnabled)
             {
                 if (requestingCameraPosChange)
                 {
@@ -207,6 +213,13 @@ namespace UNANIMATED.CameraControl
                     CameraDefaults.cameraEaseTime
                 );
             }
+
+            // cameraPosTweener = DOTween.To(() => instance.originalPosition,
+            //     delegate (Vector3 x) { instance.originalPosition = x; },
+            //     instance.cameraPositionTarget,
+            //     cameraEaseTime
+            // ).SetEase(cameraEaseMode);
+
 
 
 
@@ -231,6 +244,17 @@ namespace UNANIMATED.CameraControl
             instance.transform.localPosition = instance.offSetPosition + instance.shakeOffset;
             instance.transform.localEulerAngles = instance.offsetRotation;
             instance.chromaticAbberationIntensity = Mathf.MoveTowards(instance.chromaticAbberationIntensity, 0.15f, Time.deltaTime);
+        }
+
+        public static void RhythmCameraUpdatePositionTarget(RhythmCamera instance)
+        {
+            Vector3 prevTarget = instance.cameraPositionTarget;
+            instance.cameraPositionTarget = instance.cameraPositionTargetPrimary;
+            if (instance.cameraPositionTargetOverride.HasValue)
+            {
+                instance.cameraPositionTarget = instance.cameraPositionTargetOverride.Value;
+            }
+            if (prevTarget != instance.cameraPositionTarget) DOTween.Kill(cameraPosTweener);
         }
 
 

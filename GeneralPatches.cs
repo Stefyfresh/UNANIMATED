@@ -4,6 +4,7 @@ using System.Linq;
 using HarmonyLib;
 using Rhythm;
 using TMPro;
+using UNANIMATED.Gameplay;
 using UnityEngine;
 
 namespace UNANIMATED
@@ -39,7 +40,11 @@ namespace UNANIMATED
     {
         static void Postfix(ref bool __result)
         {
-            if (UNANIMATED.effectsEnabled) __result = false;
+            if (UNANIMATED.effectsEnabled)
+            {
+                if (GameplayController.screenShakeOverride) __result = true;
+                else __result = false;
+            }
         }
     }
 
@@ -51,7 +56,11 @@ namespace UNANIMATED
     {
         static void Postfix(ref bool __result)
         {
-            if (UNANIMATED.effectsEnabled) __result = false;
+            if (UNANIMATED.effectsEnabled)
+            {
+                if (GameplayController.screenRotOverride) __result = true;
+                else __result = false;
+            }
         }
     }
 
@@ -63,7 +72,11 @@ namespace UNANIMATED
     {
         static void Postfix(ref bool __result)
         {
-            if (UNANIMATED.effectsEnabled) __result = false;
+            if (UNANIMATED.effectsEnabled)
+            {
+                if (GameplayController.screenZoomOverride) __result = true;
+                else __result = false;
+            }
         }
     }
 

@@ -16,6 +16,10 @@ using UnityEngine.UI;
 using UnityEngine.Video;
 using UNANIMATED.CameraControl;
 using UNANIMATED.Character;
+using UNANIMATED.VideoPlayback;
+using UNANIMATED.Gameplay;
+using UNANIMATED.UI;
+using UNANIMATED.StageScene;
 
 
 namespace UNANIMATED
@@ -26,7 +30,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "net.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.6";
+        public const string PLUGIN_VERSION = "0.1.10";
         internal static new ManualLogSource Logger;
         public static Queue<HitObjectInfo> commands = new Queue<HitObjectInfo>();
         public static Queue<CommandEventInfo> events = new Queue<CommandEventInfo>();
@@ -36,13 +40,34 @@ namespace UNANIMATED
         public static bool isControllingCamera;
         public static string defaultStageScene;
         public static bool effectsWereEnabled;
+        public static UNANIMATED Instance
+        {
+            get; private set;
+        }
 
         private void Awake()
         {
             Logger = base.Logger;
-            Logger.LogInfo($"Plugin {PLUGIN_GUID} is loaded!");
             var harmony = new Harmony(PLUGIN_GUID);
             harmony.PatchAll();
+
+            Instance = this;
+
+            Logger.LogInfo($"Plugin {PLUGIN_GUID} is loaded!");
+        }
+    }
+
+
+
+    // *Controller awake override to make stage switching work
+    [HarmonyPatch(typeof(RhythmController))]
+    [HarmonyPatch("Awake")]
+    internal class ControllerAwakePrefix
+    {
+        static bool Prefix()
+        {
+            if (SceneController.preloadingScenes) return false;
+            else return true;
         }
     }
 
@@ -55,6 +80,10 @@ namespace UNANIMATED
     {
         static void Postfix(ref RhythmController __instance)
         {
+            // Don't do stuff 
+            if (SceneController.preloadingScenes) return;
+
+
             // Parse events
             UNANIMATED.events = new Queue<CommandEventInfo>(
                 __instance.beatmap.events
@@ -71,9 +100,6 @@ namespace UNANIMATED
                 {
                     try
                     {
-
-
-
                         // Dequeue start command
                         if (enableHitObject) UNANIMATED.commands.Dequeue();
                         // if (enableEvent) UNANIMATED.events.Dequeue();
@@ -101,11 +127,16 @@ namespace UNANIMATED
                         Character.CharacterController.spawner = charSpawnerGO.GetComponent<RhythmCharacterSelector>();
 
 
-
+                        // Get GameObjects
+                        ShaderMaskingController.GetCorrectShaders();
 
 
                         // Log success
                         UNANIMATED.Logger.LogInfo($"Effects and animations enabled for chart {__instance.beatmap.metadata.title}!");
+
+
+                        // Preload scenes if necessary
+                        SceneController.RunPreloadScenes();
                     }
                     catch (Exception ex)
                     {
@@ -128,10 +159,15 @@ namespace UNANIMATED
             // Reset variables
             UNANIMATED.videoEnabled = false;
             UNANIMATED.effectsEnabled = false;
-            CameraController.Reset();
-            Character.CharacterController.Reset();
             UNANIMATED.defaultStageScene = null;
             UNANIMATED.commands = new Queue<HitObjectInfo>();
+
+            // Reset control classes
+            CameraController.Reset();
+            Character.CharacterController.Reset();
+            GameplayController.Reset();
+            SceneController.Reset();
+            UIController.Reset();
         }
     }
 
@@ -148,35 +184,35 @@ namespace UNANIMATED
             if (!UNANIMATED.effectsEnabled) return;
 
 
-            // Process latest command
-            HitObjectInfo currentCommand;
-            while (UNANIMATED.commands.Count > 0 && (currentCommand = UNANIMATED.commands.Peek()) != null && __instance.songTracker.Position >= currentCommand.time)
-            {
-                try
-                {
-                    // dequeue command and perform logic
-                    UNANIMATED.commands.Dequeue();
+            // // Process latest command
+            // HitObjectInfo currentCommand;
+            // while (UNANIMATED.commands.Count > 0 && (currentCommand = UNANIMATED.commands.Peek()) != null && __instance.songTracker.Position >= currentCommand.time)
+            // {
+            //     try
+            //     {
+            //         // dequeue command and perform logic
+            //         UNANIMATED.commands.Dequeue();
 
-                    // Ignore regular notes
-                    if (currentCommand.hitSound == (int)ControlCommand.None) continue;
+            //         // Ignore regular notes
+            //         if (currentCommand.hitSound == (int)ControlCommand.None) continue;
 
-                    // Camera control command
-                    if ((int)currentCommand.hitSound == (int)ControlCommand.Camera)
-                    {
-                        CameraController.ParseCameraCommand(currentCommand);
-                    }
-                    else
-                    {
-                        UNANIMATED.Logger.LogInfo($"Parsed unsupported command at {currentCommand.time} ms: {(ControlCommand)currentCommand.hitSound} | {string.Join(", ", currentCommand.hitSample)}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    UNANIMATED.Logger.LogError($"Failed to parse command at {currentCommand.time} ms! {ex.Message}");
-                    // UNANIMATED.Logger.LogError($"{ex.Message}");
+            //         // Camera control command
+            //         if ((int)currentCommand.hitSound == (int)ControlCommand.Camera)
+            //         {
+            //             CameraController.ParseCameraCommand(currentCommand);
+            //         }
+            //         else
+            //         {
+            //             UNANIMATED.Logger.LogInfo($"Parsed unsupported command at {currentCommand.time} ms: {(ControlCommand)currentCommand.hitSound} | {string.Join(", ", currentCommand.hitSample)}");
+            //         }
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         UNANIMATED.Logger.LogError($"Failed to parse command at {currentCommand.time} ms! {ex.Message}");
+            //         // UNANIMATED.Logger.LogError($"{ex.Message}");
 
-                }
-            }
+            //     }
+            // }
 
 
             CommandEventInfo currentCommandEvent;
@@ -230,21 +266,33 @@ namespace UNANIMATED
                         {
                             hitObjectEvent.hitSample = [hitObjectEvent.hitSample[0], "0"];
                         }
-                        CameraController.ParseCameraCommand(hitObjectEvent);
+                        CameraController.ParseCommand(hitObjectEvent);
                         // }
                     }
                     else if (commandType == ControlCommand.Character)
                     {
-                        Character.CharacterController.ParseCharacterCommand(currentCommandEvent);
+                        Character.CharacterController.ParseCommand(currentCommandEvent);
+                    }
+                    else if (commandType == ControlCommand.Gameplay)
+                    {
+                        GameplayController.ParseCommand(currentCommandEvent);
+                    }
+                    else if (commandType == ControlCommand.UI)
+                    {
+                        UIController.ParseCommand(currentCommandEvent);
+                    }
+                    else if (commandType == ControlCommand.StageScene)
+                    {
+                        SceneController.SwitchSceneCommand(currentCommandEvent);
                     }
                     else
                     {
-                        UNANIMATED.Logger.LogInfo($"Parsed unsupported command at {currentCommandEvent.startTime} ms: {commandType} | {string.Join(", ", currentCommandEvent.eventParams)}");
+                        UNANIMATED.Logger.LogInfo($"Parsed unsupported command at {currentCommandEvent.startTime} ms: {commandType} | {currentCommandEvent.ParamString}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    UNANIMATED.Logger.LogError($"Failed to parse command at {currentCommandEvent.startTime} ms! {ex.Message}");
+                    UNANIMATED.Logger.LogError($"Failed to parse command at {currentCommandEvent.startTime} ms! {ex.Message}\n{ex.StackTrace}");
                     // UNANIMATED.Logger.LogError($"{ex.StackTrace}");
                 }
             }
