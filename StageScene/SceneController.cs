@@ -8,6 +8,7 @@ using System.Collections;
 using Rhythm;
 using Arcade.Unlockables;
 using Effects.RhythmGameSpecific;
+using Cinemachine;
 
 namespace UNANIMATED.StageScene
 {
@@ -20,7 +21,7 @@ namespace UNANIMATED.StageScene
         public static readonly string defaultRhythmScene = "TrainStationRhythm";
         public static readonly string characterSpawnerName = "Arcade Character Spawner";
         public static readonly string[] disallowedObjectNames = ["Rhythm Game Container", "Arcade Character Spawner", "_CameraOperatorOffsetLookatTarget", "_CameraOperatorOffsetFollowTarget", "PersistentStorage"];
-        public static readonly string[] skippedObjectNames = ["UNANIMATED Controller Positions", "Timer Canvas Object"];
+        public static readonly string[] skippedObjectNames = ["UNANIMATED Controller Positions", "MVPlayer", "Timer Canvas Object"];
 
 
         // State variables
@@ -150,6 +151,10 @@ namespace UNANIMATED.StageScene
                             GameObject maskCamObject = root.transform.Find(maskCameraName).gameObject;
                             // maskCamTexture = maskCamObject?.GetComponentInChildren<Camera>()?.activeTexture;
                             sceneMaskCameraObjects.TryAdd(sceneName, maskCamObject);
+
+                            // Fix camera mouse movement
+                            // I have no idea why this fixes it but it does
+                            root.GetComponent<CinemachineBrain>()?.ManualUpdate();
                         }
 
                         if (root.activeSelf && !skippedObjectNames.Contains(root.name))
@@ -167,8 +172,7 @@ namespace UNANIMATED.StageScene
 
                     }
 
-                    // TODO: FIX CAMERA MOUSE FOLLOWER THING
-
+                    // TODO: FIX NOISZ STAGE
 
                     // Set and store the root object
                     newRootObject.SetActive(isStartingScene);

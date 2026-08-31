@@ -28,9 +28,9 @@ namespace UNANIMATED
     [BepInProcess("UNBEATABLE.exe")]
     public class UNANIMATED : BaseUnityPlugin
     {
-        public const string PLUGIN_GUID = "net.stefyfresh.UNANIMATED";
+        public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.10";
+        public const string PLUGIN_VERSION = "0.1.11";
         internal static new ManualLogSource Logger;
         public static Queue<HitObjectInfo> commands = new Queue<HitObjectInfo>();
         public static Queue<CommandEventInfo> events = new Queue<CommandEventInfo>();

@@ -39,6 +39,7 @@ namespace UNANIMATED.CameraControl
             // Logging
             UNANIMATED.Logger.LogInfo($"Parsed camera command at {currentCommand.time} ms: {type} | params {string.Join(", ", currentCommand.hitSample)} | length {time * 1000:0} ms");
 
+            // TODO: Fix shake and add chromatic abberation as a separate setting
             // Command logic
             switch (type)
             {

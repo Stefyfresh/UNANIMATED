@@ -97,4 +97,68 @@ namespace UNANIMATED.StageScene
             if (SceneController.preloadingScenes && LevelManager.sceneHasLoaded == true) LevelManager.sceneHasLoaded = false;
         }
     }
+
+
+
+    // Fix playback stage crashing
+    [HarmonyPatch(typeof(RhythmMVPlayer))]
+    [HarmonyPriority(Priority.First)]
+    [HarmonyPatch("SetVideo")]
+    internal class SetVideoPatch
+    {
+        static bool Prefix(ref RhythmMVPlayer __instance)
+        {
+            if (UNANIMATED.effectsEnabled && SceneController.preloadingScenes) __instance.controller = RhythmController.Instance;
+            return true;
+        }
+    }
+
+
+
+    // Fix playback stage not working
+    [HarmonyPatch(typeof(RhythmMVPlayer))]
+    [HarmonyPatch("OnDisable")]
+    internal class VideoOnDisablePatch
+    {
+        static bool Prefix()
+        {
+            // Prevent the delegates from unsubscribing and not starting playback
+            if (UNANIMATED.effectsEnabled) return false;
+            else return true;
+        }
+    }
+
+
+
+    // Fix playback stage bugs
+    [HarmonyPatch(typeof(RhythmMVPlayer))]
+    [HarmonyPatch("Update")]
+    internal class RhythmMVPlayerUpdatePatch
+    {
+        static bool Prefix(ref RhythmMVPlayer __instance)
+        {
+            if (UNANIMATED.effectsEnabled && __instance.controller && __instance.controller.songTracker.Position > __instance._song.VideoStartTime && __instance.controller.songTracker.Position >= 0f && !__instance._isPlaying)
+            {
+                __instance.player.Play();
+                // if (__instance.controller.songTracker.Position > __instance.player.time) __instance.player.time = __instance.controller.songTracker.Position;
+                __instance._isPlaying = true;
+            }
+            return true;
+        }
+    }
+
+
+
+    // Fix crashes in the other instances of RhythmStencilMasks
+    [HarmonyPatch(typeof(RhythmStencilMasks))]
+    [HarmonyPriority(Priority.First)]
+    [HarmonyPatch("Start")]
+    internal class RhythmStencilMasksCrashFix
+    {
+        static bool Prefix(ref RhythmStencilMasks __instance)
+        {
+            if (UNANIMATED.effectsEnabled && SceneController.preloadingScenes) __instance._hasRhythmController = false;
+            return true;
+        }
+    }
 }

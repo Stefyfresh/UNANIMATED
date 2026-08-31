@@ -43,7 +43,7 @@ namespace UNANIMATED
         }
         public string ParamString
         {
-            get { return string.Join(",", Parameters); }
+            get { return string.Join(", ", Parameters); }
         }
 
         public int Time
@@ -59,6 +59,11 @@ namespace UNANIMATED
             return float.TryParse(GetStringParam(index), out float parsed) ? parsed : 0;
         }
 
+        public float GetIntParam(int index)
+        {
+            return int.TryParse(GetStringParam(index), out int parsed) ? parsed : 0;
+        }
+
         public string GetStringParam(int index)
         {
             string output = paramArray.ElementAtOrDefault(index);
@@ -69,7 +74,9 @@ namespace UNANIMATED
 
         public bool GetBoolParam(int index)
         {
-            return !bool.TryParse(GetStringParam(index), out bool parsed) || parsed;
+            bool isBool = bool.TryParse(GetStringParam(index), out bool parsedBool);
+            bool isInt = int.TryParse(GetStringParam(index), out int parsedInt);
+            return (isBool && parsedBool) || (isInt && parsedInt == 1) || (!isBool && !isInt);
         }
 
         public bool CommandsEqual(CommandEventInfo compare)
