@@ -28,16 +28,15 @@ namespace UNANIMATED.CameraControl
         }
 
 
-        public static void ParseCommand(HitObjectInfo currentCommand)
+        public static void ParseCommand(CommandEventInfo currentCommand)
         {
             // Get relevant variables
-            CameraOverride type = (CameraOverride)int.Parse(currentCommand.hitSample[0]);
-            float secondData = float.Parse(currentCommand.hitSample[1]);
-            float time = 0;
-            if (currentCommand.IsHoldType()) time = (int.Parse(currentCommand.objectParams[0]) - currentCommand.time) / 1000f;
+            CameraOverride type = System.Enum.Parse<CameraOverride>(currentCommand.GetStringParam(0));
+            float secondData = currentCommand.GetFloatParam(1);
+            float time = currentCommand.Duration / 1000f;
 
             // Logging
-            UNANIMATED.Logger.LogInfo($"Parsed camera command at {currentCommand.time} ms: {type} | params {string.Join(", ", currentCommand.hitSample)} | length {time * 1000:0} ms");
+            UNANIMATED.Logger.LogInfo($"Parsed camera command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {time * 1000:0} ms");
 
             // TODO: Fix shake and add chromatic abberation as a separate setting
             // Command logic
@@ -48,8 +47,8 @@ namespace UNANIMATED.CameraControl
                     break;
 
                 case CameraOverride.CustomCameraTarget:
-                    float thirdData = float.Parse(currentCommand.hitSample[2]);
-                    float fourthData = float.Parse(currentCommand.hitSample[3]);
+                    float thirdData = currentCommand.GetFloatParam(2);
+                    float fourthData = currentCommand.GetFloatParam(3);
                     UNANIMATED.isControllingCamera = false;
                     RhythmCamera.instance.SetTargetPoint(new Vector3(secondData / 10f, thirdData / 10f, fourthData / 10f));
                     UNANIMATED.isControllingCamera = true;
@@ -195,14 +194,24 @@ namespace UNANIMATED.CameraControl
             {
                 if (requestingCameraPosChange)
                 {
-                    // Custom easing and time
                     requestingCameraPosChange = false;
 
+                    // Kill old tween
+                    if (cameraPosTweener != null && cameraPosTweener.IsActive())
+                    {
+                        cameraPosTweener.Kill();
+                    }
+
+                    // Custom easing and time
                     cameraPosTweener = DOTween.To(() => instance.originalPosition,
-                        delegate (Vector3 x) { instance.originalPosition = x; },
+                        delegate (Vector3 x)
+                        {
+                            instance.originalPosition = x;
+                            // UNANIMATED.Logger.LogInfo($"X: {x} | new position: {instance.originalPosition}");
+                        },
                         instance.cameraPositionTarget,
                         cameraEaseTime
-                    ).SetEase(cameraEaseMode);
+                    ).SetEase(cameraEaseMode).SetAutoKill(true);
                 }
             }
             else
@@ -214,14 +223,6 @@ namespace UNANIMATED.CameraControl
                     CameraDefaults.cameraEaseTime
                 );
             }
-
-            // cameraPosTweener = DOTween.To(() => instance.originalPosition,
-            //     delegate (Vector3 x) { instance.originalPosition = x; },
-            //     instance.cameraPositionTarget,
-            //     cameraEaseTime
-            // ).SetEase(cameraEaseMode);
-
-
 
 
             if ((double)instance.camera.m_Lens.Aspect < 1.7)
@@ -249,13 +250,13 @@ namespace UNANIMATED.CameraControl
 
         public static void RhythmCameraUpdatePositionTarget(RhythmCamera instance)
         {
-            Vector3 prevTarget = instance.cameraPositionTarget;
+            // Vector3 prevTarget = instance.cameraPositionTarget;
             instance.cameraPositionTarget = instance.cameraPositionTargetPrimary;
             if (instance.cameraPositionTargetOverride.HasValue)
             {
                 instance.cameraPositionTarget = instance.cameraPositionTargetOverride.Value;
             }
-            if (prevTarget != instance.cameraPositionTarget) DOTween.Kill(cameraPosTweener);
+            // UNANIMATED.Logger.LogInfo($"Prev target: {prevTarget} | new target: {instance.cameraPositionTarget}");
         }
 
 

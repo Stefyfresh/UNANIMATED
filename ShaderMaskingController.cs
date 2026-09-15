@@ -16,7 +16,7 @@ namespace UNANIMATED
         {
             if (bgDimMaterial == null)
             {
-                GameObject bgDimObject = GameObject.Find("Rhythm Game Container/RhythmUI/UiParentCanvas/UiParent/Masks/BackgroundDim");
+                GameObject bgDimObject = GameObject.Find("/Rhythm Game Container/RhythmUI/UiParentCanvas/UiParent/Masks/BackgroundDim");
                 Image bgDimImage = bgDimObject?.GetComponent<Image>();
                 bgDimMaterial = bgDimImage?.material;
             }

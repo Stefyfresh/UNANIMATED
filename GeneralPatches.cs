@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Arcade.UI.SongSelect;
 using HarmonyLib;
 using Rhythm;
 using TMPro;
@@ -98,6 +99,19 @@ namespace UNANIMATED
             }
 
             return true;
+        }
+    }
+
+
+
+    [HarmonyPatch(typeof(ArcadeSongDatabase))]
+    [HarmonyPatch("Awake")]
+    internal class ArcadeSongDatabaseAwakePatch
+    {
+        static void Postfix()
+        {
+            // Fix if you quit a chart
+            UNANIMATED.effectsWereEnabled = false;
         }
     }
 }

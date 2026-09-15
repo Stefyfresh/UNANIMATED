@@ -20,6 +20,7 @@ using UNANIMATED.VideoPlayback;
 using UNANIMATED.Gameplay;
 using UNANIMATED.UI;
 using UNANIMATED.StageScene;
+using UNANIMATED.Visuals;
 
 
 namespace UNANIMATED
@@ -30,7 +31,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.11";
+        public const string PLUGIN_VERSION = "0.1.12";
         internal static new ManualLogSource Logger;
         public static Queue<HitObjectInfo> commands = new Queue<HitObjectInfo>();
         public static Queue<CommandEventInfo> events = new Queue<CommandEventInfo>();
@@ -129,6 +130,7 @@ namespace UNANIMATED
 
                         // Get GameObjects
                         ShaderMaskingController.GetCorrectShaders();
+                        VisualController.Init();
 
 
                         // Log success
@@ -168,6 +170,7 @@ namespace UNANIMATED
             GameplayController.Reset();
             SceneController.Reset();
             UIController.Reset();
+            VisualController.Reset();
         }
     }
 
@@ -182,37 +185,6 @@ namespace UNANIMATED
         {
             // Return if not enabled
             if (!UNANIMATED.effectsEnabled) return;
-
-
-            // // Process latest command
-            // HitObjectInfo currentCommand;
-            // while (UNANIMATED.commands.Count > 0 && (currentCommand = UNANIMATED.commands.Peek()) != null && __instance.songTracker.Position >= currentCommand.time)
-            // {
-            //     try
-            //     {
-            //         // dequeue command and perform logic
-            //         UNANIMATED.commands.Dequeue();
-
-            //         // Ignore regular notes
-            //         if (currentCommand.hitSound == (int)ControlCommand.None) continue;
-
-            //         // Camera control command
-            //         if ((int)currentCommand.hitSound == (int)ControlCommand.Camera)
-            //         {
-            //             CameraController.ParseCameraCommand(currentCommand);
-            //         }
-            //         else
-            //         {
-            //             UNANIMATED.Logger.LogInfo($"Parsed unsupported command at {currentCommand.time} ms: {(ControlCommand)currentCommand.hitSound} | {string.Join(", ", currentCommand.hitSample)}");
-            //         }
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         UNANIMATED.Logger.LogError($"Failed to parse command at {currentCommand.time} ms! {ex.Message}");
-            //         // UNANIMATED.Logger.LogError($"{ex.Message}");
-
-            //     }
-            // }
 
 
             CommandEventInfo currentCommandEvent;
@@ -231,43 +203,14 @@ namespace UNANIMATED
                     // dequeue command and perform logic
                     pastCommandEvent = UNANIMATED.events.Dequeue();
 
-                    // Ignore invalid
+                    // Ignore invalid commands
                     if (!Enum.TryParse(currentCommandEvent.eventType, out ControlCommand commandType) || commandType == ControlCommand.None || commandType == ControlCommand.Enable) continue;
+
 
                     // Camera control command
                     if (commandType == ControlCommand.Camera)
                     {
-                        // TODO: fix yucky code that I put in temporarily so I wouldn't have to rewrite the parsing function
-                        // if (float.TryParse(currentCommandEvent.eventParams[0], out _))
-                        // {
-                        HitObjectInfo hitObjectEvent = new()
-                        {
-                            time = currentCommandEvent.startTime,
-                            type = currentCommandEvent.HasEndTime ? 128 : 1,
-                            hitSample = currentCommandEvent.Parameters,
-                            objectParams = [$"{currentCommandEvent.EndTime}"]
-                        };
-                        if (Enum.TryParse(hitObjectEvent.hitSample[0], out CameraOverride parsed))
-                        {
-                            hitObjectEvent.hitSample[0] = $"{(int)parsed}";
-                        }
-                        try
-                        {
-                            if (Enum.TryParse(hitObjectEvent.hitSample[1], out CameraPoint parsed2))
-                            {
-                                hitObjectEvent.hitSample[1] = $"{(int)parsed2}";
-                            }
-                            if (Enum.TryParse(hitObjectEvent.hitSample[1], out Ease parsed3))
-                            {
-                                hitObjectEvent.hitSample[1] = $"{(int)parsed3}";
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            hitObjectEvent.hitSample = [hitObjectEvent.hitSample[0], "0"];
-                        }
-                        CameraController.ParseCommand(hitObjectEvent);
-                        // }
+                        CameraController.ParseCommand(currentCommandEvent);
                     }
                     else if (commandType == ControlCommand.Character)
                     {
@@ -292,8 +235,8 @@ namespace UNANIMATED
                 }
                 catch (Exception ex)
                 {
-                    UNANIMATED.Logger.LogError($"Failed to parse command at {currentCommandEvent.startTime} ms! {ex.Message}\n{ex.StackTrace}");
-                    // UNANIMATED.Logger.LogError($"{ex.StackTrace}");
+                    UNANIMATED.Logger.LogWarning($"Failed to parse command at {currentCommandEvent.startTime} ms! {ex.Message}\n{ex.StackTrace}");
+                    UNANIMATED.Logger.LogWarning($"{ex.StackTrace}");
                 }
             }
         }
