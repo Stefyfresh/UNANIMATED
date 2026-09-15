@@ -21,6 +21,7 @@ using UNANIMATED.Gameplay;
 using UNANIMATED.UI;
 using UNANIMATED.StageScene;
 using UNANIMATED.Visuals;
+using BepInEx.Configuration;
 
 
 namespace UNANIMATED
@@ -33,14 +34,24 @@ namespace UNANIMATED
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
         public const string PLUGIN_VERSION = "0.1.12";
         internal static new ManualLogSource Logger;
-        public static Queue<HitObjectInfo> commands = new Queue<HitObjectInfo>();
+
+        // Global queue
+        // public static Queue<HitObjectInfo> commands = new Queue<HitObjectInfo>();
         public static Queue<CommandEventInfo> events = new Queue<CommandEventInfo>();
 
+
+        // States (should be moved to control classes)
         public static bool effectsEnabled;
         public static bool videoEnabled;
         public static bool isControllingCamera;
         public static string defaultStageScene;
         public static bool effectsWereEnabled;
+
+        // Configs
+        public static ConfigEntry<bool> modEnabled;
+
+
+        // Instance for getting the GameObject
         public static UNANIMATED Instance
         {
             get; private set;
@@ -49,12 +60,18 @@ namespace UNANIMATED
         private void Awake()
         {
             Logger = base.Logger;
+            Logger.LogInfo($"Plugin {PLUGIN_GUID} is loaded!");
             var harmony = new Harmony(PLUGIN_GUID);
             harmony.PatchAll();
 
             Instance = this;
 
-            Logger.LogInfo($"Plugin {PLUGIN_GUID} is loaded!");
+            modEnabled = Config.Bind(
+                "General",
+                "EnableUNANIMATED",
+                true,
+                "A global toggle to allow UNANIMATED to run on supported custom charts."
+            );
         }
     }
 
@@ -101,11 +118,6 @@ namespace UNANIMATED
                 {
                     try
                     {
-                        // Dequeue start command
-                        if (enableHitObject) UNANIMATED.commands.Dequeue();
-                        // if (enableEvent) UNANIMATED.events.Dequeue();
-
-
                         // Set state
                         UNANIMATED.effectsEnabled = true;
                         UNANIMATED.effectsWereEnabled = true;
@@ -162,7 +174,8 @@ namespace UNANIMATED
             UNANIMATED.videoEnabled = false;
             UNANIMATED.effectsEnabled = false;
             UNANIMATED.defaultStageScene = null;
-            UNANIMATED.commands = new Queue<HitObjectInfo>();
+            UNANIMATED.events = [];
+            // UNANIMATED.commands = new Queue<HitObjectInfo>();
 
             // Reset control classes
             CameraController.Reset();
