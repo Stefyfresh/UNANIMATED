@@ -16,5 +16,6 @@ namespace UNANIMATED.CameraControl
         FOVTarget = 11,
         FOVOffset = 12,
         Shake = 13,
+        ChromaticAbberation = 14,
     }
 }

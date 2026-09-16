@@ -32,7 +32,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.12";
+        public const string PLUGIN_VERSION = "0.1.13";
         internal static new ManualLogSource Logger;
 
         // Global queue
@@ -48,7 +48,9 @@ namespace UNANIMATED
         public static bool effectsWereEnabled;
 
         // Configs
-        public static ConfigEntry<bool> modEnabled;
+        public static ConfigEntry<bool> enableUNANIMATED;
+        // public static ConfigEntry<bool> enableSceneSwitching;
+
 
 
         // Instance for getting the GameObject
@@ -66,12 +68,19 @@ namespace UNANIMATED
 
             Instance = this;
 
-            modEnabled = Config.Bind(
+            enableUNANIMATED = Config.Bind(
                 "General",
                 "EnableUNANIMATED",
                 true,
                 "A global toggle to allow UNANIMATED to run on supported custom charts."
             );
+
+            // enableSceneSwitching = Config.Bind(
+            //     "General",
+            //     "EnableSceneSwitching",
+            //     true,
+            //     "Enables UNANIMATED's scene switching feature. If disabled, it will use the default or currently selected scene.\nScene switching has a memory and performance impact so this is included in case that is not desired."
+            // );
         }
     }
 
@@ -100,6 +109,9 @@ namespace UNANIMATED
         {
             // Don't do stuff 
             if (SceneController.preloadingScenes) return;
+
+            // Don't do stuff if the mod is not enabled
+            if (!UNANIMATED.enableUNANIMATED.Value) return;
 
 
             // Parse events

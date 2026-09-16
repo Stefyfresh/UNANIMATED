@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 namespace UNANIMATED
@@ -77,6 +78,11 @@ namespace UNANIMATED
             bool isBool = bool.TryParse(GetStringParam(index), out bool parsedBool);
             bool isInt = int.TryParse(GetStringParam(index), out int parsedInt);
             return (isBool && parsedBool) || (isInt && parsedInt == 1) || (!isBool && !isInt);
+        }
+
+        public T GetEnumParam<T>(int index) where T : struct
+        {
+            return Enum.Parse<T>(GetStringParam(index));
         }
 
         public bool CommandsEqual(CommandEventInfo compare)

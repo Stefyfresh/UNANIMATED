@@ -10,28 +10,28 @@ using UnityEngine;
 
 namespace UNANIMATED
 {
-    [HarmonyPatch(typeof(BeatmapParserEngine))]
-    [HarmonyPatch("ParseLineHitObjects")]
-    internal class ParseLineHitObjectsPatch
-    {
-        static void Postfix(ref List<HitObjectInfo> hitObjects)
-        {
-            HitObjectInfo hitObject = hitObjects.Last();
-            if (hitObject.IsCommand() && hitObject.laneNumber == 2)
-            {
-                // UNANIMATED.Logger.LogInfo("try add command");
-                try
-                {
-                    UNANIMATED.commands.Enqueue(hitObject);
-                }
-                catch (Exception ex)
-                {
-                    UNANIMATED.Logger.LogError($"Failed to add command! {ex}");
-                }
-                // UNANIMATED.Logger.LogInfo("Added command");
-            }
-        }
-    }
+    // [HarmonyPatch(typeof(BeatmapParserEngine))]
+    // [HarmonyPatch("ParseLineHitObjects")]
+    // internal class ParseLineHitObjectsPatch
+    // {
+    //     static void Postfix(ref List<HitObjectInfo> hitObjects)
+    //     {
+    //         HitObjectInfo hitObject = hitObjects.Last();
+    //         if (hitObject.IsCommand() && hitObject.laneNumber == 2)
+    //         {
+    //             // UNANIMATED.Logger.LogInfo("try add command");
+    //             try
+    //             {
+    //                 UNANIMATED.commands.Enqueue(hitObject);
+    //             }
+    //             catch (Exception ex)
+    //             {
+    //                 UNANIMATED.Logger.LogError($"Failed to add command! {ex}");
+    //             }
+    //             // UNANIMATED.Logger.LogInfo("Added command");
+    //         }
+    //     }
+    // }
 
 
 

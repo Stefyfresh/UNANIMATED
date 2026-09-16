@@ -31,7 +31,7 @@ namespace UNANIMATED.CameraControl
         public static void ParseCommand(CommandEventInfo currentCommand)
         {
             // Get relevant variables
-            CameraOverride type = System.Enum.Parse<CameraOverride>(currentCommand.GetStringParam(0));
+            CameraOverride type = currentCommand.GetEnumParam<CameraOverride>(0);
             float secondData = currentCommand.GetFloatParam(1);
             float time = currentCommand.Duration / 1000f;
 
@@ -43,7 +43,7 @@ namespace UNANIMATED.CameraControl
             switch (type)
             {
                 case CameraOverride.CameraTarget:
-                    RhythmCameraHelpers.SetCameraPoint((CameraPoint)secondData);
+                    RhythmCameraHelpers.SetCameraPoint(currentCommand.GetEnumParam<CameraPoint>(1));
                     break;
 
                 case CameraOverride.CustomCameraTarget:
@@ -59,7 +59,15 @@ namespace UNANIMATED.CameraControl
                     break;
 
                 case CameraOverride.EaseMode:
-                    cameraEaseMode = (Ease)(int)secondData;
+                    cameraEaseMode = currentCommand.GetEnumParam<Ease>(1);
+                    break;
+
+                case CameraOverride.Shake:
+                    RhythmCameraHelpers.Shake(time, secondData, 0);
+                    break;
+
+                case CameraOverride.ChromaticAbberation:
+                    RhythmCameraHelpers.Shake(time, 0, secondData);
                     break;
 
                 default:
@@ -117,10 +125,6 @@ namespace UNANIMATED.CameraControl
                                 case CameraOverride.FOVOffset:
                                     RhythmCameraHelpers.SetFOVOffset(secondData, time);
                                     break;
-
-                                case CameraOverride.Shake:
-                                    RhythmCameraHelpers.Shake(time, secondData, secondData);
-                                    break;
                             }
 
                         }
@@ -174,9 +178,6 @@ namespace UNANIMATED.CameraControl
 
                                 case CameraOverride.FOVOffset:
                                     RhythmCameraHelpers.SetFOVOffsetImmediate(secondData);
-                                    break;
-                                case CameraOverride.Shake:
-                                    RhythmCameraHelpers.Shake(0, secondData, secondData);
                                     break;
                             }
                         }
