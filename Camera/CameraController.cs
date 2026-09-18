@@ -1,3 +1,4 @@
+using System.Linq;
 using DG.Tweening;
 using Rhythm;
 using UnityEngine;
@@ -9,6 +10,7 @@ namespace UNANIMATED.CameraControl
         public static Vector3 leftCameraPeekOffset = new(-1f, 0, 0.5f);
         public static Vector3 rightCameraPeekOffset = new(1f, 0, 0.5f);
         public static float cameraEaseTime = CameraDefaults.cameraEaseTime;
+        public static float? cameraEaseTimeOverride;
         public static Ease cameraEaseMode = Ease.OutQuint;
         public static float cameraFOV = CameraDefaults.cameraFOV;
         public static float cameraFOVTarget = CameraDefaults.cameraFOV;
@@ -16,42 +18,57 @@ namespace UNANIMATED.CameraControl
         public static float fovSpeed;
         public static Tweener cameraPosTweener;
         public static bool requestingCameraPosChange;
+        public static bool isControllingCamera;
+        public static bool legacyCameraUnit;
+
+        public static float CameraEaseTime
+        {
+            get
+            {
+                if (cameraEaseTimeOverride != null) return cameraEaseTimeOverride.Value;
+                else return cameraEaseTime;
+            }
+        }
 
         public static void Reset()
         {
-            UNANIMATED.isControllingCamera = false;
+            isControllingCamera = false;
             cameraEaseTime = CameraDefaults.cameraEaseTime;
             cameraFOV = CameraDefaults.cameraFOV;
             cameraFOVTarget = CameraDefaults.cameraFOV;
             cameraEaseMode = CameraDefaults.cameraEaseMode;
+            cameraEaseTimeOverride = null;
             requestingCameraPosChange = false;
+            legacyCameraUnit = false;
         }
 
 
         public static void ParseCommand(CommandEventInfo currentCommand)
         {
             // Get relevant variables
-            CameraOverride type = currentCommand.GetEnumParam<CameraOverride>(0);
+            CameraOverride type = currentCommand.GetEnumParamForced<CameraOverride>(0);
             float secondData = currentCommand.GetFloatParam(1);
+            float thirdData = currentCommand.GetFloatParam(2);
             float time = currentCommand.Duration / 1000f;
 
             // Logging
             UNANIMATED.Logger.LogInfo($"Parsed camera command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {time * 1000:0} ms");
 
-            // TODO: Fix shake and add chromatic abberation as a separate setting
+
             // Command logic
             switch (type)
             {
                 case CameraOverride.CameraTarget:
-                    RhythmCameraHelpers.SetCameraPoint(currentCommand.GetEnumParam<CameraPoint>(1));
+                    if (currentCommand.HasEndTime) cameraEaseTimeOverride = new float?(time);
+
+                    RhythmCameraHelpers.SetCameraPoint(currentCommand.GetEnumParamForced<CameraPoint>(1));
                     break;
 
                 case CameraOverride.CustomCameraTarget:
-                    float thirdData = currentCommand.GetFloatParam(2);
+                    if (currentCommand.HasEndTime) cameraEaseTimeOverride = new float?(time);
                     float fourthData = currentCommand.GetFloatParam(3);
-                    UNANIMATED.isControllingCamera = false;
-                    RhythmCamera.instance.SetTargetPoint(new Vector3(secondData / 10f, thirdData / 10f, fourthData / 10f));
-                    UNANIMATED.isControllingCamera = true;
+
+                    RhythmCameraHelpers.SetCustomCameraPoint(secondData, thirdData, fourthData);
                     break;
 
                 case CameraOverride.EaseTime:
@@ -59,11 +76,13 @@ namespace UNANIMATED.CameraControl
                     break;
 
                 case CameraOverride.EaseMode:
-                    cameraEaseMode = currentCommand.GetEnumParam<Ease>(1);
+                    cameraEaseMode = currentCommand.GetEnumParamForced<Ease>(1);
                     break;
 
+                // TODO: fix these
                 case CameraOverride.Shake:
-                    RhythmCameraHelpers.Shake(time, secondData, 0);
+                    if (thirdData != 0) RhythmCameraHelpers.Shake(time, secondData, thirdData);
+                    else RhythmCameraHelpers.Shake(time, secondData, secondData);
                     break;
 
                 case CameraOverride.ChromaticAbberation:
@@ -72,7 +91,9 @@ namespace UNANIMATED.CameraControl
 
                 default:
                     {
-                        float amount = secondData / 10f;
+                        float amount = secondData;
+                        if (legacyCameraUnit) amount = secondData / 10f;
+                        bool reverse = currentCommand.GetBoolParam(2);
                         // Other mode
                         if (time >= 0)
                         {
@@ -80,7 +101,7 @@ namespace UNANIMATED.CameraControl
                             switch (type)
                             {
                                 case CameraOverride.Reset:
-                                    bool resetOtherParams = secondData == 0;
+                                    bool resetOtherParams = !currentCommand.GetBoolParam(1);
 
                                     RhythmCameraHelpers.ResetCameraPos();
                                     if (resetOtherParams)
@@ -95,7 +116,7 @@ namespace UNANIMATED.CameraControl
                                     break;
 
                                 case CameraOverride.ZoomOffset:
-                                    RhythmCameraHelpers.ZoomOffset(amount, time);
+                                    RhythmCameraHelpers.ZoomOffset(amount, time, reverse);
                                     break;
 
                                 case CameraOverride.ZoomTarget:
@@ -103,7 +124,7 @@ namespace UNANIMATED.CameraControl
                                     break;
 
                                 case CameraOverride.RotOffset:
-                                    RhythmCameraHelpers.RotOffset(secondData, time);
+                                    RhythmCameraHelpers.RotOffset(secondData, time, reverse);
                                     break;
 
                                 case CameraOverride.RotTarget:
@@ -111,11 +132,11 @@ namespace UNANIMATED.CameraControl
                                     break;
 
                                 case CameraOverride.HorizontalOffset:
-                                    RhythmCameraHelpers.HorizontalOffset(amount, time);
+                                    RhythmCameraHelpers.HorizontalOffset(amount, time, reverse);
                                     break;
 
                                 case CameraOverride.HorizontalTarget:
-                                    RhythmCameraHelpers.HorizontalOffset(amount, time);
+                                    RhythmCameraHelpers.SetHorizontalTarget(amount, time);
                                     break;
 
                                 case CameraOverride.FOVTarget:
@@ -123,7 +144,7 @@ namespace UNANIMATED.CameraControl
                                     break;
 
                                 case CameraOverride.FOVOffset:
-                                    RhythmCameraHelpers.SetFOVOffset(secondData, time);
+                                    RhythmCameraHelpers.FOVOffset(secondData, time, reverse);
                                     break;
                             }
 
@@ -134,7 +155,7 @@ namespace UNANIMATED.CameraControl
                             switch (type)
                             {
                                 case CameraOverride.Reset:
-                                    bool resetOtherParams = secondData == 1;
+                                    bool resetOtherParams = !currentCommand.GetBoolParam(1);
 
                                     RhythmCameraHelpers.ResetCameraPos();
                                     if (resetOtherParams)
@@ -211,8 +232,10 @@ namespace UNANIMATED.CameraControl
                             // UNANIMATED.Logger.LogInfo($"X: {x} | new position: {instance.originalPosition}");
                         },
                         instance.cameraPositionTarget,
-                        cameraEaseTime
+                        CameraEaseTime
                     ).SetEase(cameraEaseMode).SetAutoKill(true);
+
+                    cameraEaseTimeOverride = null;
                 }
             }
             else

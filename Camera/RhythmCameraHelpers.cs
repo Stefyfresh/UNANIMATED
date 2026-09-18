@@ -187,10 +187,23 @@ namespace UNANIMATED.CameraControl
             CameraController.cameraFOVTarget = amount;
         }
 
-        public static void SetFOVOffset(float amount, float time)
+        /// <summary>
+        /// Offsets the current FOV of the camera by a certain amount after a certain amount of time.
+        /// </summary>
+        /// <param name="amount"></param>
+        /// <param name="time"></param>
+        /// <param name="reverseFromDestination"></param>
+        public static void FOVOffset(float amount, float time, bool reverseFromDestination = false)
         {
-            CameraController.cameraFOVTime += time;
-            CameraController.cameraFOVTarget += amount;
+            if (!reverseFromDestination)
+            {
+                CameraController.cameraFOVTarget += amount;
+            }
+            else
+            {
+                CameraController.cameraFOV += amount;
+            }
+            CameraController.cameraFOVTime = time;
         }
 
         public static void SetFOVTargetImmediate(float amount)
@@ -212,7 +225,7 @@ namespace UNANIMATED.CameraControl
         /// <param name="point"></param>
         public static void SetCameraPoint(CameraPoint point)
         {
-            UNANIMATED.isControllingCamera = false;
+            CameraController.isControllingCamera = false;
             switch (point)
             {
                 case CameraPoint.Left:
@@ -231,7 +244,30 @@ namespace UNANIMATED.CameraControl
                     RhythmCamera.instance.SetTargetPoint(RhythmController.Instance.rightCameraTargetPoint);
                     break;
             }
-            UNANIMATED.isControllingCamera = true;
+
+            // Immediately apply if ease time is instant
+            if (CameraController.CameraEaseTime == 0) RhythmCamera.instance.originalPosition = RhythmCamera.instance.cameraPositionTarget;
+
+            CameraController.isControllingCamera = true;
+        }
+
+
+
+        /// <summary>
+        /// Sets a custom camera point at any X, Y, Z value.
+        /// </summary>
+        /// <param name="point"></param>
+        public static void SetCustomCameraPoint(float x, float y, float z)
+        {
+            CameraController.isControllingCamera = false;
+
+            if (CameraController.legacyCameraUnit) RhythmCamera.instance.SetTargetPoint(new Vector3(x / 10f, y / 10f, z / 10f));
+            else RhythmCamera.instance.SetTargetPoint(new Vector3(x, y, z));
+
+            // Immediately apply if ease time is instant
+            if (CameraController.CameraEaseTime == 0) RhythmCamera.instance.originalPosition = RhythmCamera.instance.cameraPositionTarget;
+
+            CameraController.isControllingCamera = true;
         }
 
 
@@ -253,7 +289,7 @@ namespace UNANIMATED.CameraControl
         /// </summary>
         public static void ResetCameraPos()
         {
-            UNANIMATED.isControllingCamera = false;
+            CameraController.isControllingCamera = false;
 
             RhythmController controller = RhythmController.Instance;
             if (controller.cameraIsCentered)

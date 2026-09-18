@@ -16,7 +16,7 @@ namespace UNANIMATED.UI
         {
             // Get relevant variables
             UIOption type = System.Enum.Parse<UIOption>(currentCommand.GetStringParam(0));
-            bool enabled = currentCommand.GetBoolParam(1);
+            bool enabled = currentCommand.GetBoolParam(1, true);
             float time = currentCommand.Duration;
 
             // Logging

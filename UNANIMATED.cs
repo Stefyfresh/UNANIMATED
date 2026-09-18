@@ -32,25 +32,28 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.13";
+        public const string PLUGIN_VERSION = "0.1.14";
         internal static new ManualLogSource Logger;
 
+
         // Global queue
-        // public static Queue<HitObjectInfo> commands = new Queue<HitObjectInfo>();
-        public static Queue<CommandEventInfo> events = new Queue<CommandEventInfo>();
+        public static Queue<CommandEventInfo> events = [];
+        public static List<CommandEventInfo> beatmapEvents = [];
 
 
-        // States (should be moved to control classes)
+        // States
         public static bool effectsEnabled;
         public static bool videoEnabled;
-        public static bool isControllingCamera;
-        public static string defaultStageScene;
         public static bool effectsWereEnabled;
+
 
         // Configs
         public static ConfigEntry<bool> enableUNANIMATED;
-        // public static ConfigEntry<bool> enableSceneSwitching;
+        public static ConfigEntry<bool> enableSceneSwitching;
 
+
+        // Songs
+        public static List<BeatmapIndex.Song> customUNANIMATEDSongs = [];
 
 
         // Instance for getting the GameObject
@@ -75,26 +78,17 @@ namespace UNANIMATED
                 "A global toggle to allow UNANIMATED to run on supported custom charts."
             );
 
-            // enableSceneSwitching = Config.Bind(
-            //     "General",
-            //     "EnableSceneSwitching",
-            //     true,
-            //     "Enables UNANIMATED's scene switching feature. If disabled, it will use the default or currently selected scene.\nScene switching has a memory and performance impact so this is included in case that is not desired."
-            // );
-        }
-    }
-
-
-
-    // *Controller awake override to make stage switching work
-    [HarmonyPatch(typeof(RhythmController))]
-    [HarmonyPatch("Awake")]
-    internal class ControllerAwakePrefix
-    {
-        static bool Prefix()
-        {
-            if (SceneController.preloadingScenes) return false;
-            else return true;
+            enableSceneSwitching = Config.Bind(
+                "General",
+                "EnableSceneSwitching",
+                true,
+                "Enables UNANIMATED's scene switching feature. If disabled, it will use the default or currently selected scene.\nScene switching has a memory and performance impact so this is included in case that is not desired."
+            );
+            // Reload the songs
+            enableSceneSwitching.SettingChanged += (s, r) =>
+            {
+                customUNANIMATEDSongs.ForEach((song) => song.forceStageScene = enableSceneSwitching.Value);
+            };
         }
     }
 
@@ -107,7 +101,7 @@ namespace UNANIMATED
     {
         static void Postfix(ref RhythmController __instance)
         {
-            // Don't do stuff 
+            // Don't do stuff while preloading
             if (SceneController.preloadingScenes) return;
 
             // Don't do stuff if the mod is not enabled
@@ -120,13 +114,13 @@ namespace UNANIMATED
                 .Where(e => Enum.TryParse<ControlCommand>(e.eventType, out _) && !int.TryParse(e.eventType, out _))
                 .Select(e => new CommandEventInfo(e)));
 
+            UNANIMATED.beatmapEvents = UNANIMATED.events.ToList();
+
 
             // Enable effects if custom chart and enable command is present
             if (JeffBezosController.rhythmProgression is ArcadeProgression arcadeProgression && arcadeProgression.isCustomChart)
             {
-                bool enableHitObject = __instance.beatmap.commands.Count > 0 && __instance.beatmap.commands.First().lane == 2 && __instance.beatmap.commands.First().whistle && __instance.beatmap.commands.First().clap && __instance.beatmap.commands.First().finish;
-                bool enableEvent = UNANIMATED.events.Count > 0 && UNANIMATED.events.First().eventType == "Enable";
-                if (enableHitObject || enableEvent)
+                if (CommandEventInfo.IsEnableCommand(__instance.beatmap.events.First()))
                 {
                     try
                     {
@@ -137,13 +131,10 @@ namespace UNANIMATED
 
 
                         // Check video
-                        if (enableEvent)
+                        foreach (GeneralOptions option in UNANIMATED.events.Where(e => e.Command == ControlCommand.UNANIMATED).Select(e => e.GetEnumParam<GeneralOptions>(0)))
                         {
-                            foreach (string str in UNANIMATED.events.First().eventParams)
-                            {
-                                Enum.TryParse(str, out GeneralOptions options);
-                                if (options == GeneralOptions.BackgroundVideo) UNANIMATED.videoEnabled = true;
-                            }
+                            // Enum.TryParse(str, out GeneralOptions options);
+                            if (option == GeneralOptions.ShowBackgroundVideo) UNANIMATED.videoEnabled = true;
                         }
 
                         // set up characters
@@ -163,11 +154,18 @@ namespace UNANIMATED
 
                         // Preload scenes if necessary
                         SceneController.RunPreloadScenes();
+
+
+                        // Check legacy camera units
+                        if (UNANIMATED.beatmapEvents.Any(e => e.Command == ControlCommand.UNANIMATED && e.GetEnumParam<GeneralOptions>(0) == GeneralOptions.LegacyCameraUnits))
+                        {
+                            UNANIMATED.Logger.LogInfo("Using legacy camera units.");
+                            CameraController.legacyCameraUnit = true;
+                        }
                     }
                     catch (Exception ex)
                     {
-                        UNANIMATED.Logger.LogError($"Failed to initialize UNANIMATED! {ex.Message}");
-                        UNANIMATED.Logger.LogError($"{ex.StackTrace}");
+                        UNANIMATED.Logger.LogError($"Failed to initialize UNANIMATED! {ex}");
                     }
                 }
             }
@@ -185,8 +183,9 @@ namespace UNANIMATED
             // Reset variables
             UNANIMATED.videoEnabled = false;
             UNANIMATED.effectsEnabled = false;
-            UNANIMATED.defaultStageScene = null;
+            // UNANIMATED.defaultStageScene = null;
             UNANIMATED.events = [];
+            UNANIMATED.beatmapEvents = [];
             // UNANIMATED.commands = new Queue<HitObjectInfo>();
 
             // Reset control classes
@@ -229,7 +228,8 @@ namespace UNANIMATED
                     pastCommandEvent = UNANIMATED.events.Dequeue();
 
                     // Ignore invalid commands
-                    if (!Enum.TryParse(currentCommandEvent.eventType, out ControlCommand commandType) || commandType == ControlCommand.None || commandType == ControlCommand.Enable) continue;
+                    ControlCommand commandType = currentCommandEvent.Command;
+                    if (commandType == ControlCommand.None || commandType == ControlCommand.Enable || commandType == ControlCommand.UNANIMATED) continue;
 
 
                     // Camera control command
@@ -260,8 +260,8 @@ namespace UNANIMATED
                 }
                 catch (Exception ex)
                 {
-                    UNANIMATED.Logger.LogWarning($"Failed to parse command at {currentCommandEvent.startTime} ms! {ex.Message}\n{ex.StackTrace}");
-                    UNANIMATED.Logger.LogWarning($"{ex.StackTrace}");
+                    UNANIMATED.Logger.LogWarning($"Failed to parse command at {currentCommandEvent.startTime} ms! {ex}");
+                    // UNANIMATED.Logger.LogWarning($"{ex.StackTrace}");
                 }
             }
         }

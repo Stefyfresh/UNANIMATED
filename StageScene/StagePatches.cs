@@ -44,49 +44,50 @@ namespace UNANIMATED.StageScene
     {
         private static void Postfix(ref BeatmapIndex.Song __instance, Beatmap beatmap)
         {
-            if (UNANIMATED.defaultStageScene != null)
+            // if (UNANIMATED.defaultStageScene != null)
+            // {
+            if (UNANIMATED.enableUNANIMATED.Value && beatmap.events != null && beatmap.events.Count > 0 && CommandEventInfo.IsEnableCommand(beatmap.events.First()))
             {
+                // Get the default stage event if it exists and get the stage name
+                EventInfo defaultStageEvent = beatmap.events.Find((e) => e.eventType == ControlCommand.UNANIMATED.ToString() && e.eventParams != null && e.eventParams.ElementAtOrDefault(0).StartsWith(GeneralOptions.DefaultStageScene.ToString()));
+
+                string defaultStageScene;
+                if (defaultStageEvent == default) defaultStageScene = "TrainStationRhythm";
+                else defaultStageScene = new CommandEventInfo(defaultStageEvent).GetStringParam(1);
+
+                // Check if scene exists and apply if so, or set to train station
                 bool existsScene = RhythmSceneIndex.CachedDefaultIndex.GetAllRhythmScenes().Exists((rhythmScene) =>
                 {
-                    if (rhythmScene.scene == UNANIMATED.defaultStageScene) return true;
+                    if (rhythmScene.scene == defaultStageScene) return true;
                     string[] strings = rhythmScene.scene.Split("/");
 
-                    if (strings[strings.Count() - 1] == UNANIMATED.defaultStageScene) return true;
+                    if (strings[strings.Count() - 1] == defaultStageScene) return true;
                     return false;
                 });
 
                 if (existsScene)
                 {
-                    UNANIMATED.Logger.LogInfo($"Setting stage to \"{UNANIMATED.defaultStageScene}\" on song \"{beatmap.metadata.titleUnicode}\"");
+                    UNANIMATED.Logger.LogInfo($"Setting stage to {defaultStageScene} on song {beatmap.metadata.title}");
 
-                    __instance.stageScene = UNANIMATED.defaultStageScene;
-                    // __instance.forceStageScene = true; //TODO: MAKE THIS A SETTING
+                    __instance.stageScene = defaultStageScene;
+                    __instance.forceStageScene = UNANIMATED.enableSceneSwitching.Value;
                 }
                 else
                 {
-                    UNANIMATED.Logger.LogWarning($"Invalid rhythm scene \"{UNANIMATED.defaultStageScene}\" parsed for song \"{beatmap.metadata.titleUnicode}!\"");
+                    UNANIMATED.Logger.LogWarning($"Invalid rhythm scene \"{defaultStageScene}\" parsed for song {beatmap.metadata.titleUnicode}!");
+
+                    __instance.stageScene = "TrainStationRhythm";
+                    __instance.forceStageScene = UNANIMATED.enableSceneSwitching.Value;
                 }
-                UNANIMATED.defaultStageScene = null;
-
-
-                // string.Join(",\n", Arcade.Unlockables.RhythmSceneIndex.CachedDefaultIndex.GetAllRhythmScenes().Select(s => s.scene).ToArray())
+                UNANIMATED.customUNANIMATEDSongs.Remove(__instance);
+                UNANIMATED.customUNANIMATEDSongs.Add(__instance);
             }
         }
     }
 
 
 
-    // [HarmonyPatch(typeof(LevelManager))]
-    // [HarmonyPatch("LoadCustomArcadeLevel")]
-    // internal class LoadCustomArcadeLevelPatch
-    // {
-    //     static void Postfix(BeatmapIndex.Song song, string customScene = "")
-    //     {
-    //         if (song.stageScene != "TrainStationRhythm" && song.)
-    //     }
-    // }
-
-
+    // Block level from finishing loading if scenes are being loaded
     [HarmonyPatch(typeof(LevelManager))]
     [HarmonyPatch("OnSceneLoaded")]
     internal class OnSceneLoadedPatch

@@ -5,6 +5,11 @@ namespace UNANIMATED
 {
     public class CommandEventInfo : Rhythm.EventInfo
     {
+        public static bool IsEnableCommand(Rhythm.EventInfo check)
+        {
+            return check.eventParams != null && Enum.TryParse(check.eventType, out ControlCommand command) && command == ControlCommand.UNANIMATED && Enum.TryParse(check.eventParams.ElementAtOrDefault(0), out GeneralOptions option) && option == GeneralOptions.Enable;
+        }
+
         private string[] paramArray;
         public CommandEventInfo(Rhythm.EventInfo info)
         {
@@ -55,6 +60,14 @@ namespace UNANIMATED
             }
         }
 
+        public ControlCommand Command
+        {
+            get
+            {
+                return Enum.TryParse(eventType, out ControlCommand commandType) ? commandType : ControlCommand.None;
+            }
+        }
+
         public float GetFloatParam(int index)
         {
             return float.TryParse(GetStringParam(index), out float parsed) ? parsed : 0;
@@ -73,16 +86,21 @@ namespace UNANIMATED
             return output;
         }
 
-        public bool GetBoolParam(int index)
+        public bool GetBoolParam(int index, bool defaultValue = false)
         {
             bool isBool = bool.TryParse(GetStringParam(index), out bool parsedBool);
             bool isInt = int.TryParse(GetStringParam(index), out int parsedInt);
-            return (isBool && parsedBool) || (isInt && parsedInt == 1) || (!isBool && !isInt);
+            return (isBool && parsedBool) || (isInt && parsedInt == 1) || (defaultValue && !isBool && !isInt);
+        }
+
+        public T GetEnumParamForced<T>(int index) where T : struct
+        {
+            return Enum.Parse<T>(GetStringParam(index));
         }
 
         public T GetEnumParam<T>(int index) where T : struct
         {
-            return Enum.Parse<T>(GetStringParam(index));
+            return Enum.TryParse(GetStringParam(index), out T parsed) ? parsed : default;
         }
 
         public bool CommandsEqual(CommandEventInfo compare)

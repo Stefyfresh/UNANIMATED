@@ -25,11 +25,13 @@ namespace UNANIMATED.CameraControl
     {
         static bool Prefix()
         {
+            // Disable camera control from RhythmController when UNANIMATED is in charge
+            if (CameraController.isControllingCamera) return false;
+
+            // Request a change if camera is not controlled
             CameraController.requestingCameraPosChange = true;
 
-            // Disable camera control from RhythmController when UNANIMATED is in charge
-            if (UNANIMATED.isControllingCamera) return false;
-            else return true;
+            return true;
         }
     }
 

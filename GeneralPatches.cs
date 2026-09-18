@@ -6,10 +6,23 @@ using HarmonyLib;
 using Rhythm;
 using TMPro;
 using UNANIMATED.Gameplay;
+using UNANIMATED.StageScene;
 using UnityEngine;
 
 namespace UNANIMATED
 {
+    // *Controller awake override to make stage switching work
+    [HarmonyPatch(typeof(RhythmController))]
+    [HarmonyPatch("Awake")]
+    internal class ControllerAwakePrefix
+    {
+        static bool Prefix()
+        {
+            if (SceneController.preloadingScenes) return false;
+            else return true;
+        }
+    }
+
     // [HarmonyPatch(typeof(BeatmapParserEngine))]
     // [HarmonyPatch("ParseLineHitObjects")]
     // internal class ParseLineHitObjectsPatch

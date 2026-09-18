@@ -3,6 +3,9 @@ namespace UNANIMATED
     public enum GeneralOptions
     {
         None,
-        BackgroundVideo,
+        Enable,
+        ShowBackgroundVideo,
+        DefaultStageScene,
+        LegacyCameraUnits
     }
 }

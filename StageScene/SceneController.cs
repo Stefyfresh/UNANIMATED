@@ -18,7 +18,7 @@ namespace UNANIMATED.StageScene
         public static readonly string rhythmGameContainerName = "Rhythm Game Container";
         public static readonly string maskCameraName = "SpriteMaskCam";
         public static readonly string controllerPositionsObjectName = "UNANIMATED Controller Positions";
-        public static readonly string defaultRhythmScene = "TrainStationRhythm";
+        // public static readonly string defaultRhythmScene = "TrainStationRhythm";
         public static readonly string characterSpawnerName = "Arcade Character Spawner";
         public static readonly string[] disallowedObjectNames = ["Rhythm Game Container", "Arcade Character Spawner", "_CameraOperatorOffsetLookatTarget", "_CameraOperatorOffsetFollowTarget", "PersistentStorage"];
         public static readonly string[] skippedObjectNames = ["UNANIMATED Controller Positions", "MVPlayer", "Timer Canvas Object"];
@@ -44,11 +44,11 @@ namespace UNANIMATED.StageScene
 
         public static void RunPreloadScenes()
         {
-            sceneEvents = UNANIMATED.events.Where((e) => e.eventType == "StageScene").ToList();
+            sceneEvents = UNANIMATED.beatmapEvents.Where((e) => e.Command == ControlCommand.StageScene).ToList();
 
             if (sceneEvents != null && sceneEvents.Count() > 0)
             {
-                if (FileStorage.beatmapOptions.CurrentRhythmScene == string.Empty)
+                if (UNANIMATED.enableSceneSwitching.Value)
                 {
                     UNANIMATED.Logger.LogInfo("Stage scene commands detected in events! Preloading relevant scenes.");
 
@@ -56,7 +56,7 @@ namespace UNANIMATED.StageScene
                     preloadingScenes = true;
 
                     // Add current scene
-                    sceneEvents.Add(new CommandEventInfo(new EventInfo() { eventParams = [defaultRhythmScene] }));
+                    sceneEvents.Add(new CommandEventInfo(new EventInfo() { eventParams = [SceneManager.GetActiveScene().name] }));
 
                     // Start tasks
                     UNANIMATED.Instance.StartCoroutine(PreloadScenes());
@@ -64,7 +64,7 @@ namespace UNANIMATED.StageScene
                 }
                 else
                 {
-                    UNANIMATED.Logger.LogInfo("Stage scene commands detected in events but player's stage is not default. Not preloading scenes.");
+                    UNANIMATED.Logger.LogInfo("Stage scene commands detected in events but stage switching is not enabled. Not preloading scenes.");
                 }
             }
         }
@@ -77,7 +77,7 @@ namespace UNANIMATED.StageScene
             // {
 
             // Set current state
-            activeSceneName = defaultRhythmScene;
+            activeSceneName = SceneManager.GetActiveScene().name;
             rhythmGameContainer = GameObject.Find(rhythmGameContainerName);
             characterSpawner = GameObject.Find(characterSpawnerName);
 
@@ -232,10 +232,10 @@ namespace UNANIMATED.StageScene
 
         public static void SwitchSceneCommand(CommandEventInfo currentCommand)
         {
-            UNANIMATED.Logger.LogInfo($"Parsed stage command at {currentCommand.Time} ms: stage {currentCommand.ParamString} | length {currentCommand.Duration:0} ms");
-
-            if (FileStorage.beatmapOptions.CurrentRhythmScene == string.Empty)
+            if (UNANIMATED.enableSceneSwitching.Value)
             {
+                UNANIMATED.Logger.LogInfo($"Parsed stage scene command at {currentCommand.Time} ms: stage {currentCommand.ParamString}");
+
                 string sceneName = currentCommand.GetStringParam(0);
                 Scene sceneToSwitch = SceneManager.GetSceneByName(sceneName);
                 if (sceneToSwitch.IsValid())

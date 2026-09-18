@@ -19,7 +19,7 @@ namespace UNANIMATED.Gameplay
         {
             // Get relevant variables
             GameplayOption type = System.Enum.Parse<GameplayOption>(currentCommand.GetStringParam(0));
-            bool enabled = currentCommand.GetBoolParam(1);
+            bool enabled = currentCommand.GetBoolParam(1, true);
             float time = currentCommand.Duration;
 
             // Logging

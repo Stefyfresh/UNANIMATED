@@ -4,6 +4,7 @@ namespace UNANIMATED
     {
         None,
         Enable = 14,
+        UNANIMATED,
         Camera = 2,
         Character = 4,
         Gameplay,
