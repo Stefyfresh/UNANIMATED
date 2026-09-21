@@ -8,15 +8,17 @@ This mod makes charting for Arcade Mode much more visually interesting than the 
 
 ## Features
 
+This list of features is currently implemented in the mod!
+
 - Full control over the camera, its position, rotation, FOV, easing, etc.
 - Background video support in any stage
+- Swappable stages
+- Swappable characters
 
 ## Planned Features
 
 These features are planned, but I have no guarantee that I will implement all of them!
 
-- Swappable stages
-- Swappable characters
 - Custom colours in gameplay
 - Coloured background and foreground overlays
 - SV/scroll speed control
