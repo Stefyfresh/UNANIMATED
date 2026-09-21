@@ -17,11 +17,15 @@ namespace UNANIMATED.UI
                 if (__instance.name != "DelayFollowCanvas(bg)")
                 {
                     __instance.transform.localPosition = __instance.offset ? (__instance.goToTarget - __instance._firstCameraPos) : __instance.goToTarget;
-                    __instance.transform.localRotation = RhythmCamera.instance.gameObject.transform.localRotation;
+                    if (__instance.name == "UiParentCanvas" && __instance.transform.childCount > 0)
+                    {
+                        __instance.transform.GetChild(0).localRotation = RhythmCamera.instance.gameObject.transform.localRotation;
 
-                    // tan(theta) / tan(30)
-                    float multiplier = Mathf.Tan(CameraController.cameraFOV / 2 * Mathf.Deg2Rad) / 0.57735f;
-                    __instance.transform.localScale = new Vector3(multiplier, multiplier, 1) * UIController.Defaults.canvasCamFollowerScale;
+                        // tan(theta) / tan(30)
+                        float multiplier = Mathf.Tan(CameraController.cameraFOV / 2 * Mathf.Deg2Rad) / 0.57735f;
+                        // __instance.transform.localScale = new Vector3(multiplier, multiplier, 1) * UIController.Defaults.canvasCamFollowerScale;
+                        __instance.transform.GetChild(0).localScale = new Vector3(multiplier, multiplier, 1);
+                    }
                 }
             }
         }

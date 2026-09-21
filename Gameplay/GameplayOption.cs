@@ -6,5 +6,6 @@ namespace UNANIMATED.Gameplay
         ScreenShake,
         ScreenRot,
         ScreenZoom,
+        PlayFieldRot,
     }
 }

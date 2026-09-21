@@ -41,6 +41,9 @@ namespace UNANIMATED.Gameplay
                     screenZoomOverride = enabled;
                     break;
 
+                    // case GameplayOption.PlayFieldRot:
+                    //     break;
+
                     // default:
                     //     {
                     //         // Other mode

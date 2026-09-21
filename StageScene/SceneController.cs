@@ -9,6 +9,7 @@ using Rhythm;
 using Arcade.Unlockables;
 using Effects.RhythmGameSpecific;
 using Cinemachine;
+using UnityEngine.Video;
 
 namespace UNANIMATED.StageScene
 {
@@ -16,6 +17,8 @@ namespace UNANIMATED.StageScene
     {
         // Constants
         public static readonly string rhythmGameContainerName = "Rhythm Game Container";
+        public static readonly string noiszStageName = "NOISZRhythm";
+
         public static readonly string maskCameraName = "SpriteMaskCam";
         public static readonly string controllerPositionsObjectName = "UNANIMATED Controller Positions";
         // public static readonly string defaultRhythmScene = "TrainStationRhythm";
@@ -141,6 +144,9 @@ namespace UNANIMATED.StageScene
                             transform.localScale = root.transform.localScale;
 
                             rhythmGameTransforms.TryAdd(sceneName, transform);
+
+                            // NOISZ stage preload stuff
+                            if (sceneName == noiszStageName) NOISZStageController.SpecialPreloadNOISZStage(root);
                         }
 
                         // Set camera references
@@ -171,8 +177,6 @@ namespace UNANIMATED.StageScene
                         }
 
                     }
-
-                    // TODO: FIX NOISZ STAGE
 
                     // Set and store the root object
                     newRootObject.SetActive(isStartingScene);
@@ -238,7 +242,7 @@ namespace UNANIMATED.StageScene
 
                 string sceneName = currentCommand.GetStringParam(0);
                 Scene sceneToSwitch = SceneManager.GetSceneByName(sceneName);
-                if (sceneToSwitch.IsValid())
+                if (sceneToSwitch.IsValid() && activeSceneName != sceneName)
                 {
                     UNANIMATED.Logger.LogInfo($"Switching stage scene to {sceneName}.");
 
@@ -295,6 +299,14 @@ namespace UNANIMATED.StageScene
                     // Set active scene
                     SceneManager.SetActiveScene(sceneToSwitch);
                     // UNANIMATED.Logger.LogInfo($"Switching stage scene to {sceneName}.");
+
+
+                    // Fix NOISZ stage things
+                    NOISZStageController.SwitchNOISZ(sceneName == noiszStageName);
+                }
+                else if (activeSceneName == sceneName)
+                {
+                    UNANIMATED.Logger.LogInfo($"Stage scene {sceneName} is the same as current scene, ignoring.");
                 }
                 else
                 {
@@ -340,6 +352,5 @@ namespace UNANIMATED.StageScene
             sceneMainCameraObjects = [];
             maskCamTexture = null;
         }
-
     }
 }

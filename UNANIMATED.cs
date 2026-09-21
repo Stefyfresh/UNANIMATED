@@ -32,7 +32,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.14";
+        public const string PLUGIN_VERSION = "0.1.16";
         internal static new ManualLogSource Logger;
 
 
@@ -90,6 +90,13 @@ namespace UNANIMATED
                 customUNANIMATEDSongs.ForEach((song) => song.forceStageScene = enableSceneSwitching.Value);
             };
         }
+
+        // public static bool IsEnabledOnChart()
+        // {
+        //     return RhythmController.Instance?.beatmap?.events != null
+        //         && RhythmController.Instance.beatmap.events.Count() > 0
+        //         && UNANIMATED.beatmapEvents.Any(e => e.Command == ControlCommand.UNANIMATED && e.GetEnumParam<GeneralOptions>(0) == GeneralOptions.LegacyCameraUnits)
+        // }
     }
 
 
@@ -108,22 +115,23 @@ namespace UNANIMATED
             if (!UNANIMATED.enableUNANIMATED.Value) return;
 
 
-            // Parse events
-            UNANIMATED.events = new Queue<CommandEventInfo>(
-                __instance.beatmap.events
-                .Where(e => Enum.TryParse<ControlCommand>(e.eventType, out _) && !int.TryParse(e.eventType, out _))
-                .Select(e => new CommandEventInfo(e)));
-
-            UNANIMATED.beatmapEvents = UNANIMATED.events.ToList();
-
-
-            // Enable effects if custom chart and enable command is present
-            if (JeffBezosController.rhythmProgression is ArcadeProgression arcadeProgression && arcadeProgression.isCustomChart)
+            try
             {
-                if (CommandEventInfo.IsEnableCommand(__instance.beatmap.events.First()))
+                // Parse events
+                UNANIMATED.events = new Queue<CommandEventInfo>(
+                    __instance.beatmap.events
+                    .Where(e => Enum.TryParse<ControlCommand>(e.eventType, out _) && !int.TryParse(e.eventType, out _))
+                    .Select(e => new CommandEventInfo(e)));
+
+                UNANIMATED.beatmapEvents = UNANIMATED.events.ToList();
+
+
+                // Enable effects if custom chart and enable command is present
+                if (JeffBezosController.rhythmProgression is ArcadeProgression arcadeProgression && arcadeProgression.isCustomChart)
                 {
-                    try
+                    if (UNANIMATED.beatmapEvents.Any(e => e.Command == ControlCommand.UNANIMATED && e.GetEnumParam<GeneralOptions>(0) == GeneralOptions.Enable))
                     {
+
                         // Set state
                         UNANIMATED.effectsEnabled = true;
                         UNANIMATED.effectsWereEnabled = true;
@@ -162,12 +170,16 @@ namespace UNANIMATED
                             UNANIMATED.Logger.LogInfo("Using legacy camera units.");
                             CameraController.legacyCameraUnit = true;
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        UNANIMATED.Logger.LogError($"Failed to initialize UNANIMATED! {ex}");
+
+
+                        // Start up NOISZ controller
+                        NOISZStageController.Init(__instance);
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                UNANIMATED.Logger.LogError($"Failed to initialize UNANIMATED! {ex}");
             }
         }
     }
@@ -264,6 +276,8 @@ namespace UNANIMATED
                     // UNANIMATED.Logger.LogWarning($"{ex.StackTrace}");
                 }
             }
+
+            if (UNANIMATED.effectsEnabled && UNANIMATED.enableSceneSwitching.Value && NOISZStageController.succeededPreloading) NOISZStageController.ManualUpdate(__instance);
         }
     }
 }

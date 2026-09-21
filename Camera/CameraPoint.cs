@@ -7,6 +7,7 @@ namespace UNANIMATED.CameraControl
         LeftWide,
         Wide,
         RightWide,
-        Right
+        Right,
+        Reset
     }
 }

@@ -6,6 +6,10 @@ namespace UNANIMATED.CameraControl
 {
     public static class RhythmCameraHelpers
     {
+        public static Vector3 rotationTarget;
+
+        private static RhythmCamera Camera { get { return RhythmCamera.instance; } }
+
         /// <summary>
         /// Shakes the camera for a certain time and by a certain amount.
         /// </summary>
@@ -14,9 +18,9 @@ namespace UNANIMATED.CameraControl
         /// <param name="chromaticAbberationAmount"></param>
         public static void Shake(float duration, float amount, float chromaticAbberationAmount)
         {
-            RhythmCamera.instance.StopAllCoroutines();
+            Camera.StopAllCoroutines();
             CameraOperator.VhsVerticalValueTweener.SetValue(0.5f * chromaticAbberationAmount);
-            RhythmCamera.instance.StartCoroutine(RhythmCamera.instance.ShakeCoroutine(duration, amount, chromaticAbberationAmount));
+            Camera.StartCoroutine(Camera.ShakeCoroutine(duration, amount, chromaticAbberationAmount));
         }
 
 
@@ -30,13 +34,13 @@ namespace UNANIMATED.CameraControl
         {
             if (!reverseFromDestination)
             {
-                RhythmCamera.instance.horizontalTarget += amount;
+                Camera.horizontalTarget += amount;
             }
             else
             {
-                RhythmCamera.instance.horizontalOffset += amount;
+                Camera.horizontalOffset += amount;
             }
-            RhythmCamera.instance.horizontalTime = time;
+            Camera.horizontalTime = time;
         }
 
 
@@ -50,13 +54,13 @@ namespace UNANIMATED.CameraControl
         {
             if (!reverseFromDestination)
             {
-                RhythmCamera.instance.zoomTarget += amount;
+                Camera.zoomTarget += amount;
             }
             else
             {
-                RhythmCamera.instance.zoomOffset += amount;
+                Camera.zoomOffset += amount;
             }
-            RhythmCamera.instance.zoomTime = time;
+            Camera.zoomTime = time;
         }
 
 
@@ -70,13 +74,13 @@ namespace UNANIMATED.CameraControl
         {
             if (!reverseFromDestination)
             {
-                RhythmCamera.instance.rotationTarget += amount;
+                Camera.rotationTarget += amount;
             }
             else
             {
-                RhythmCamera.instance.rotationOffset += amount;
+                Camera.rotationOffset += amount;
             }
-            RhythmCamera.instance.rotationTime = time;
+            Camera.rotationTime = time;
         }
 
 
@@ -86,8 +90,8 @@ namespace UNANIMATED.CameraControl
         /// <param name="amount"></param>
         public static void SetZoomOffsetImmediate(float amount)
         {
-            RhythmCamera.instance.zoomTarget += amount;
-            RhythmCamera.instance.zoomOffset += amount;
+            Camera.zoomTarget += amount;
+            Camera.zoomOffset += amount;
         }
 
 
@@ -97,8 +101,8 @@ namespace UNANIMATED.CameraControl
         /// <param name="amount"></param>
         public static void SetZoomTargetImmediate(float amount)
         {
-            RhythmCamera.instance.zoomTarget = amount;
-            RhythmCamera.instance.zoomOffset = amount;
+            Camera.zoomTarget = amount;
+            Camera.zoomOffset = amount;
         }
 
 
@@ -109,8 +113,8 @@ namespace UNANIMATED.CameraControl
         /// <param name="time"></param>
         public static void SetZoomTarget(float amount, float time)
         {
-            RhythmCamera.instance.zoomTarget = amount;
-            RhythmCamera.instance.zoomTime = time;
+            Camera.zoomTarget = amount;
+            Camera.zoomTime = time;
         }
 
 
@@ -120,8 +124,8 @@ namespace UNANIMATED.CameraControl
         /// <param name="amount"></param>
         public static void SetRotTargetImmediate(float amount)
         {
-            RhythmCamera.instance.rotationOffset = amount;
-            RhythmCamera.instance.rotationTarget = amount;
+            Camera.rotationOffset = amount;
+            Camera.rotationTarget = amount;
         }
 
 
@@ -131,8 +135,8 @@ namespace UNANIMATED.CameraControl
         /// <param name="amount"></param>
         public static void SetRotOffsetImmediate(float amount)
         {
-            RhythmCamera.instance.rotationOffset += amount;
-            RhythmCamera.instance.rotationTarget += amount;
+            Camera.rotationOffset += amount;
+            Camera.rotationTarget += amount;
         }
 
 
@@ -143,8 +147,8 @@ namespace UNANIMATED.CameraControl
         /// <param name="time"></param>
         public static void SetRotTarget(float amount, float time)
         {
-            RhythmCamera.instance.rotationTarget = amount;
-            RhythmCamera.instance.rotationTime = time;
+            Camera.rotationTarget = amount;
+            Camera.rotationTime = time;
         }
 
 
@@ -154,8 +158,8 @@ namespace UNANIMATED.CameraControl
         /// <param name="amount"></param>
         public static void SetHorizontalTargetImmediate(float amount)
         {
-            RhythmCamera.instance.horizontalOffset = amount;
-            RhythmCamera.instance.horizontalTarget = amount;
+            Camera.horizontalOffset = amount;
+            Camera.horizontalTarget = amount;
         }
 
 
@@ -165,8 +169,8 @@ namespace UNANIMATED.CameraControl
         /// <param name="amount"></param>
         public static void SetHorizontalOffsetImmediate(float amount)
         {
-            RhythmCamera.instance.horizontalOffset += amount;
-            RhythmCamera.instance.horizontalTarget += amount;
+            Camera.horizontalOffset += amount;
+            Camera.horizontalTarget += amount;
         }
 
 
@@ -177,8 +181,8 @@ namespace UNANIMATED.CameraControl
         /// <param name="time"></param>
         public static void SetHorizontalTarget(float amount, float time)
         {
-            RhythmCamera.instance.horizontalTarget = amount;
-            RhythmCamera.instance.horizontalTime = time;
+            Camera.horizontalTarget = amount;
+            Camera.horizontalTime = time;
         }
 
         public static void SetFOVTarget(float amount, float time)
@@ -229,24 +233,32 @@ namespace UNANIMATED.CameraControl
             switch (point)
             {
                 case CameraPoint.Left:
-                    RhythmCamera.instance.SetTargetPoint(RhythmController.Instance.leftCameraTargetPoint);
+                    Camera.SetTargetPoint(RhythmController.Instance.leftCameraTargetPoint);
                     break;
                 case CameraPoint.LeftWide:
-                    RhythmCamera.instance.SetTargetPoint(RhythmController.Instance.centerCameraTargetPoint + CameraController.leftCameraPeekOffset);
+                    Camera.SetTargetPoint(RhythmController.Instance.centerCameraTargetPoint + CameraController.leftCameraPeekOffset);
                     break;
                 case CameraPoint.Wide:
-                    RhythmCamera.instance.SetTargetPoint(RhythmController.Instance.centerCameraTargetPoint);
+                    Camera.SetTargetPoint(RhythmController.Instance.centerCameraTargetPoint);
                     break;
                 case CameraPoint.RightWide:
-                    RhythmCamera.instance.SetTargetPoint(RhythmController.Instance.centerCameraTargetPoint + CameraController.rightCameraPeekOffset);
+                    Camera.SetTargetPoint(RhythmController.Instance.centerCameraTargetPoint + CameraController.rightCameraPeekOffset);
                     break;
                 case CameraPoint.Right:
-                    RhythmCamera.instance.SetTargetPoint(RhythmController.Instance.rightCameraTargetPoint);
+                    Camera.SetTargetPoint(RhythmController.Instance.rightCameraTargetPoint);
                     break;
+                case CameraPoint.Reset:
+                    ResetCameraPos();
+                    return;
             }
 
+            CameraController.KillTween();
+
             // Immediately apply if ease time is instant
-            if (CameraController.CameraEaseTime == 0) RhythmCamera.instance.originalPosition = RhythmCamera.instance.cameraPositionTarget;
+            if (CameraController.CameraEaseTime == 0)
+            {
+                Camera.originalPosition = Camera.cameraPositionTarget;
+            }
 
             CameraController.isControllingCamera = true;
         }
@@ -261,31 +273,45 @@ namespace UNANIMATED.CameraControl
         {
             CameraController.isControllingCamera = false;
 
-            if (CameraController.legacyCameraUnit) RhythmCamera.instance.SetTargetPoint(new Vector3(x / 10f, y / 10f, z / 10f));
-            else RhythmCamera.instance.SetTargetPoint(new Vector3(x, y, z));
+            if (CameraController.legacyCameraUnit) Camera.SetTargetPoint(new Vector3(x / 10f, y / 10f, z / 10f));
+            else Camera.SetTargetPoint(new Vector3(x, y, z));
+
+            CameraController.KillTween();
 
             // Immediately apply if ease time is instant
-            if (CameraController.CameraEaseTime == 0) RhythmCamera.instance.originalPosition = RhythmCamera.instance.cameraPositionTarget;
+            if (CameraController.CameraEaseTime == 0)
+            {
+                Camera.originalPosition = Camera.cameraPositionTarget;
+            }
 
             CameraController.isControllingCamera = true;
         }
 
 
-        // /// <summary>
-        // /// Immediately sets the camera point.
-        // /// </summary>
-        // /// <param name="point"></param>
-        // public static void SetCameraPointImmediate(CameraPoint point)
-        // {
-        //     SetCameraPoint(point);
-        //     Vector3 updatedTarget = RhythmCamera.instance.cameraPositionTarget;
-        //     RhythmCamera.instance.transform.localPosition = updatedTarget;
-        //     RhythmCamera.instance.originalPosition = updatedTarget;
-        // }
+        /// <summary>
+        /// Sets a custom camera rotation for any X, Y, Z value.
+        /// </summary>
+        /// <param name="point"></param>
+        public static void SetCustomCameraRot(float x, float y, float z)
+        {
+            CameraController.requestingCameraRotChange = true;
+            CameraController.KillRotTween();
+
+            rotationTarget = new Vector3(x, y, z);
+
+            // Immediately apply if ease time is instant
+            if (CameraController.CameraRotEaseTime == 0)
+            {
+                Camera.originalRotation = rotationTarget;
+            }
+        }
+
+
 
 
         /// <summary>
         /// Reset the camera position back to where it is supposed to be.
+        /// This is a duplicate of the code in RhythmController but that can be called immediately.
         /// </summary>
         public static void ResetCameraPos()
         {
