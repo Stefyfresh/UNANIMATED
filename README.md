@@ -1,5 +1,7 @@
 # UNANIMATED
 
+**NOTE: THIS IS CURRENTLY AN ALPHA WORK IN PROGRESS- if you would like to try it, please DM me on Discord! (my username is Stefyfresh)**
+
 A custom animation system mod for the hit rhythm game UNBEATABLE! 
 
 This mod makes charting for Arcade Mode much more visually interesting than the base game.
