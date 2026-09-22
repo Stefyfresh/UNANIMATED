@@ -6,6 +6,7 @@ namespace UNANIMATED
         Enable,
         ShowBackgroundVideo,
         DefaultStageScene,
-        LegacyCameraUnits
+        LegacyCameraUnits,
+        SingleCameraNotesAreInstant
     }
 }

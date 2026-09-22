@@ -21,10 +21,10 @@ namespace UNANIMATED.StageScene
 
         public static readonly string maskCameraName = "SpriteMaskCam";
         public static readonly string controllerPositionsObjectName = "UNANIMATED Controller Positions";
-        // public static readonly string defaultRhythmScene = "TrainStationRhythm";
         public static readonly string characterSpawnerName = "Arcade Character Spawner";
         public static readonly string[] disallowedObjectNames = ["Rhythm Game Container", "Arcade Character Spawner", "_CameraOperatorOffsetLookatTarget", "_CameraOperatorOffsetFollowTarget", "PersistentStorage"];
         public static readonly string[] skippedObjectNames = ["UNANIMATED Controller Positions", "MVPlayer", "Timer Canvas Object"];
+        public static readonly string[] scenesWithNoBackgroundFade = ["DreamReflection", "GreenscreenRhythm", "PlaybackStage"];
 
 
         // State variables
@@ -36,6 +36,7 @@ namespace UNANIMATED.StageScene
         public static string activeSceneName;
         public static GameObject rhythmGameContainer;
         public static GameObject characterSpawner;
+        public static GameObject backgroundFade;
         public static Dictionary<string, Transform> rhythmGameTransforms = [];
         public static Dictionary<string, GameObject> sceneRootObjects = [];
         public static Dictionary<string, GameObject> sceneMaskCameraObjects = [];
@@ -54,6 +55,9 @@ namespace UNANIMATED.StageScene
                 if (UNANIMATED.enableSceneSwitching.Value)
                 {
                     UNANIMATED.Logger.LogInfo("Stage scene commands detected in events! Preloading relevant scenes.");
+
+                    // Set time scale before preloading var is set
+                    Time.timeScale = 0;
 
                     // Ensure no awake calls execute and override the code that we need
                     preloadingScenes = true;
@@ -83,6 +87,7 @@ namespace UNANIMATED.StageScene
             activeSceneName = SceneManager.GetActiveScene().name;
             rhythmGameContainer = GameObject.Find(rhythmGameContainerName);
             characterSpawner = GameObject.Find(characterSpawnerName);
+            backgroundFade = RhythmController.Instance?.transform.root.Find("RhythmUI/RhythmCanvas/BackgroundFade")?.gameObject;
 
             GameObject controllerPosParent = new GameObject(controllerPositionsObjectName);
 
@@ -110,7 +115,7 @@ namespace UNANIMATED.StageScene
 
                     while (!asyncLoad.isDone)
                     {
-                        JeffBezosController.SetTimeScale(0, 0);
+                        // JeffBezosController.SetTimeScale(0, 0);
                         yield return null;
                     }
                 }
@@ -184,6 +189,8 @@ namespace UNANIMATED.StageScene
 
 
                     UNANIMATED.Logger.LogInfo($"Preloaded scene {sceneName}!");
+
+                    yield return new WaitForEndOfFrame();
                 }
                 else
                 {
@@ -195,15 +202,13 @@ namespace UNANIMATED.StageScene
             Scene startScene = SceneManager.GetSceneByName(activeSceneName);
             if (startScene.IsValid()) SceneManager.SetActiveScene(startScene);
 
-            // // Set the correct texture for the cameras
-            // for (int i = 0; i < sceneMaskCameraObjects.Values.Count(); i++)
-            // {
-            //     Camera maskCamera = sceneMaskCameraObjects.Values.ElementAt(i)?.GetComponent<Camera>();
-            //     if (maskCamera != null) maskCamera.targetTexture = maskCamTexture;
-            // }
 
             // Disable scene preloading
             preloadingScenes = false;
+
+            // // Fix current stencil mask instance
+            // RhythmStencilMasks masks = RhythmController.Instance?.GetComponentInChildren<RhythmStencilMasks>();
+            // if (masks) masks._hasRhythmController = true;
 
             UNANIMATED.Logger.LogInfo("Successfully preloaded all scenes!");
             // }
@@ -222,7 +227,7 @@ namespace UNANIMATED.StageScene
             // Main loop
             while (preloadingScenes)
             {
-                JeffBezosController.SetTimeScale(0, 0);
+                // JeffBezosController.SetTimeScale(0, 0);
                 yield return null;
             }
 
@@ -246,11 +251,17 @@ namespace UNANIMATED.StageScene
                 {
                     UNANIMATED.Logger.LogInfo($"Switching stage scene to {sceneName}.");
 
-                    // // disable new camera
+                    // // Disable the camera for a few frames to let it catch up and not flash stuff on screen
                     // if (sceneMainCameraObjects.TryGetValue(sceneName, out GameObject mainCamObject))
                     // {
-                    //     mainCamObject.SetActive(false);
-                    //     UNANIMATED.Instance.StartCoroutine(WaitEnableCamera(mainCamObject));
+                    //     Camera mainCam = mainCamObject.GetComponent<Camera>();
+                    //     if (mainCam != null)
+                    //     {
+                    //         mainCamObject.SetActive(false);
+                    //         UNANIMATED.Instance.StartCoroutine(WaitEnableCamera(mainCam, mainCam.cullingMask, mainCam.clearFlags, mainCamObject));
+                    //         // mainCam.clearFlags = CameraClearFlags.Nothing;
+                    //         // mainCam.cullingMask = 0;
+                    //     }
                     // }
 
                     // Fix mask camera
@@ -283,8 +294,8 @@ namespace UNANIMATED.StageScene
                         }
                     }
 
-                    // Fix background on dream stage
-                    RhythmController.Instance?.transform.root.Find("RhythmUI/RhythmCanvas/BackgroundFade")?.gameObject.SetActive(sceneName != "DreamReflection");
+                    // Fix background on scenes with no background fade
+                    backgroundFade?.SetActive(!scenesWithNoBackgroundFade.Contains(sceneName));
 
                     // enable new objects
                     if (sceneRootObjects.TryGetValue(sceneName, out GameObject currentObject))
@@ -315,7 +326,7 @@ namespace UNANIMATED.StageScene
             }
         }
 
-        // private static IEnumerator WaitEnableCamera(GameObject mainCamObject)
+        // private static IEnumerator WaitEnableCamera(Camera mainCam, int cullMask, CameraClearFlags clearFlags, GameObject mainCamObject)
         // {
         //     yield return new WaitForEndOfFrame();
         //     yield return new WaitForEndOfFrame();
@@ -323,8 +334,29 @@ namespace UNANIMATED.StageScene
         //     yield return new WaitForEndOfFrame();
         //     yield return new WaitForEndOfFrame();
         //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
+        //     yield return new WaitForEndOfFrame();
         //     yield return new WaitForFixedUpdate();
-        //     mainCamObject.SetActive(true);
+        //     // mainCam.clearFlags = clearFlags;
+        //     // mainCam.cullingMask = cullMask;
         // }
 
 

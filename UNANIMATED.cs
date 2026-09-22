@@ -32,7 +32,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.16";
+        public const string PLUGIN_VERSION = "0.1.17";
         internal static new ManualLogSource Logger;
 
 
@@ -154,6 +154,7 @@ namespace UNANIMATED
                         // Get GameObjects
                         ShaderMaskingController.GetCorrectShaders();
                         VisualController.Init();
+                        UIController.Init(__instance);
 
 
                         // Log success
@@ -169,6 +170,11 @@ namespace UNANIMATED
                         {
                             UNANIMATED.Logger.LogInfo("Using legacy camera units.");
                             CameraController.legacyCameraUnit = true;
+                        }
+                        if (UNANIMATED.beatmapEvents.Any(e => e.Command == ControlCommand.UNANIMATED && e.GetEnumParam<GeneralOptions>(0) == GeneralOptions.SingleCameraNotesAreInstant))
+                        {
+                            UNANIMATED.Logger.LogInfo("Using single camera notes are instant.");
+                            CameraController.singleCameraNotesAreInstant = true;
                         }
 
 

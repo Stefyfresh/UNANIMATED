@@ -4,6 +4,7 @@ namespace UNANIMATED.UI
     {
         Reset,
         ForceLockedUI,
-
+        Hide,
+        Show,
     }
 }

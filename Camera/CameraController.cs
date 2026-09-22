@@ -28,6 +28,8 @@ namespace UNANIMATED.CameraControl
         public static bool requestingCameraRotChange;
         public static bool isControllingCamera;
         public static bool legacyCameraUnit;
+        public static bool singleCameraNotesAreInstant;
+
 
         public static float CameraEaseTime { get { return cameraEaseTimeOverride != null ? cameraEaseTimeOverride.Value : cameraEaseTime; } }
 
@@ -44,6 +46,7 @@ namespace UNANIMATED.CameraControl
             requestingCameraPosChange = false;
             requestingCameraRotChange = false;
             legacyCameraUnit = false;
+            singleCameraNotesAreInstant = false;
             KillTween();
             KillRotTween();
         }
@@ -58,6 +61,8 @@ namespace UNANIMATED.CameraControl
             float fourthData = currentCommand.GetFloatParam(3);
             float time = currentCommand.Duration / 1000f;
 
+            bool parseThisCommandTime = currentCommand.HasEndTime || singleCameraNotesAreInstant;
+
             // Logging
             UNANIMATED.Logger.LogInfo($"Parsed camera command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {time * 1000:0} ms");
 
@@ -66,21 +71,33 @@ namespace UNANIMATED.CameraControl
             switch (type)
             {
                 case CameraOverride.CameraTarget:
-                    if (currentCommand.HasEndTime) cameraEaseTimeOverride = new float?(time);
+                    if (parseThisCommandTime) cameraEaseTimeOverride = new float?(time);
 
                     RhythmCameraHelpers.SetCameraPoint(currentCommand.GetEnumParamForced<CameraPoint>(1));
                     break;
 
                 case CameraOverride.CustomCameraTarget:
-                    if (currentCommand.HasEndTime) cameraEaseTimeOverride = new float?(time);
+                    if (parseThisCommandTime) cameraEaseTimeOverride = new float?(time);
 
                     RhythmCameraHelpers.SetCustomCameraPoint(secondData, thirdData, fourthData);
                     break;
 
                 case CameraOverride.CustomRotTarget:
-                    if (currentCommand.HasEndTime) cameraRotEaseTimeOverride = new float?(time);
+                    if (parseThisCommandTime) cameraRotEaseTimeOverride = new float?(time);
 
                     RhythmCameraHelpers.SetCustomCameraRot(secondData, thirdData, fourthData);
+                    break;
+
+                case CameraOverride.CustomCameraOffset:
+                    if (parseThisCommandTime) cameraEaseTimeOverride = new float?(time);
+
+                    RhythmCameraHelpers.SetCustomCameraPointOffset(secondData, thirdData, fourthData);
+                    break;
+
+                case CameraOverride.CustomRotOffset:
+                    if (parseThisCommandTime) cameraRotEaseTimeOverride = new float?(time);
+
+                    RhythmCameraHelpers.SetCustomCameraRotOffset(secondData, thirdData, fourthData);
                     break;
 
                 case CameraOverride.EaseTime:
@@ -254,7 +271,6 @@ namespace UNANIMATED.CameraControl
                         delegate (Vector3 x)
                         {
                             instance.offsetRotation = x;
-                            // UNANIMATED.Logger.LogInfo($"X: {x} | new position: {instance.originalPosition}");
                         },
                         RhythmCameraHelpers.rotationTarget,
                         CameraRotEaseTime

@@ -2,7 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Arcade.Unlockables;
 using HarmonyLib;
+using Overworld;
 using Rhythm;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace UNANIMATED.StageScene
 {
@@ -44,44 +47,50 @@ namespace UNANIMATED.StageScene
     {
         private static void Postfix(ref BeatmapIndex.Song __instance, Beatmap beatmap)
         {
-            // if (UNANIMATED.defaultStageScene != null)
-            // {
-            if (UNANIMATED.enableUNANIMATED.Value && beatmap.events != null && beatmap.events.Count > 0 && CommandEventInfo.IsEnableCommand(beatmap.events.First()))
+            try
             {
-                // Get the default stage event if it exists and get the stage name
-                EventInfo defaultStageEvent = beatmap.events.Find((e) => e.eventType == ControlCommand.UNANIMATED.ToString() && e.eventParams != null && e.eventParams.ElementAtOrDefault(0).StartsWith(GeneralOptions.DefaultStageScene.ToString()));
-
-                if (defaultStageEvent != default)
+                if (UNANIMATED.enableUNANIMATED.Value && beatmap.events != null && beatmap.events.Count > 0 && beatmap.events.Any(CommandEventInfo.IsEnableCommand))
                 {
-                    string defaultStageScene = new CommandEventInfo(defaultStageEvent).GetStringParam(1);
+                    // Get the default stage event if it exists and get the stage name
+                    EventInfo defaultStageEvent = beatmap.events.Find((e) => e.eventType == ControlCommand.UNANIMATED.ToString() && e.eventParams != null && e.eventParams.ElementAtOrDefault(0).StartsWith(GeneralOptions.DefaultStageScene.ToString()));
 
-                    // Check if scene exists and apply if so, or set to train station
-                    bool existsScene = RhythmSceneIndex.CachedDefaultIndex.GetAllRhythmScenes().Exists((rhythmScene) =>
+                    if (defaultStageEvent != default)
                     {
-                        if (rhythmScene.scene == defaultStageScene) return true;
-                        string[] strings = rhythmScene.scene.Split("/");
+                        string defaultStageScene = new CommandEventInfo(defaultStageEvent).GetStringParam(1);
 
-                        if (strings[strings.Count() - 1] == defaultStageScene) return true;
-                        return false;
-                    });
+                        // Check if scene exists and apply if so, or set to train station
+                        bool existsScene = RhythmSceneIndex.CachedDefaultIndex.GetAllRhythmScenes().Exists((rhythmScene) =>
+                        {
+                            if (rhythmScene.scene == defaultStageScene) return true;
+                            string[] strings = rhythmScene.scene.Split("/");
 
-                    if (existsScene)
-                    {
-                        UNANIMATED.Logger.LogInfo($"Setting stage to {defaultStageScene} on song {beatmap.metadata.title}");
+                            if (strings[strings.Count() - 1] == defaultStageScene) return true;
+                            return false;
+                        });
 
-                        __instance.stageScene = defaultStageScene;
-                        __instance.forceStageScene = UNANIMATED.enableSceneSwitching.Value;
+                        if (existsScene)
+                        {
+                            UNANIMATED.Logger.LogInfo($"Setting stage to {defaultStageScene} on song {beatmap.metadata.title}");
+
+                            __instance.stageScene = defaultStageScene;
+                            __instance.forceStageScene = UNANIMATED.enableSceneSwitching.Value;
+                        }
+                        else
+                        {
+                            UNANIMATED.Logger.LogWarning($"Invalid rhythm scene \"{defaultStageScene}\" parsed for song {beatmap.metadata.title}!");
+
+                            // __instance.stageScene = "TrainStationRhythm";
+                            // __instance.forceStageScene = UNANIMATED.enableSceneSwitching.Value;
+                        }
+                        UNANIMATED.customUNANIMATEDSongs.Remove(__instance);
+                        UNANIMATED.customUNANIMATEDSongs.Add(__instance);
                     }
-                    else
-                    {
-                        UNANIMATED.Logger.LogWarning($"Invalid rhythm scene \"{defaultStageScene}\" parsed for song {beatmap.metadata.titleUnicode}!");
-
-                        __instance.stageScene = "TrainStationRhythm";
-                        // __instance.forceStageScene = UNANIMATED.enableSceneSwitching.Value;
-                    }
-                    UNANIMATED.customUNANIMATEDSongs.Remove(__instance);
-                    UNANIMATED.customUNANIMATEDSongs.Add(__instance);
                 }
+
+            }
+            catch (System.Exception ex)
+            {
+                UNANIMATED.Logger.LogWarning($"Error setting stage on song {beatmap.metadata.title}! {ex.Message}");
             }
         }
     }
@@ -161,6 +170,33 @@ namespace UNANIMATED.StageScene
         {
             if (UNANIMATED.effectsEnabled && SceneController.preloadingScenes) __instance._hasRhythmController = false;
             return true;
+        }
+    }
+
+
+
+    // Stop timeScale from accepting input when scene is preloading 
+    [HarmonyPatch(typeof(Time))]
+    [HarmonyPriority(Priority.First)]
+    [HarmonyPatch("timeScale", MethodType.Setter)]
+    internal class TimeScalePatch
+    {
+        static bool Prefix()
+        {
+            return !(UNANIMATED.effectsEnabled && SceneController.preloadingScenes);
+        }
+    }
+
+
+
+    // Stop the DayNightSystem from incorrectly setting the render settings for the wrong scene
+    [HarmonyPatch(typeof(DayNightSystem))]
+    [HarmonyPatch("UpdateDayTimeSettings")]
+    internal class DayNightSystemPatch
+    {
+        static bool Prefix(ref DayNightSystem __instance)
+        {
+            return __instance.gameObject.scene == SceneManager.GetActiveScene();
         }
     }
 }

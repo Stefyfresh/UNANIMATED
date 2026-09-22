@@ -288,6 +288,31 @@ namespace UNANIMATED.CameraControl
         }
 
 
+
+
+        /// <summary>
+        /// Sets a custom camera point at any X, Y, Z value.
+        /// </summary>
+        /// <param name="point"></param>
+        public static void SetCustomCameraPointOffset(float x, float y, float z)
+        {
+            CameraController.isControllingCamera = false;
+
+            Camera.SetTargetPoint(new Vector3(Camera.cameraPositionTarget.x + x, Camera.cameraPositionTarget.y + y, Camera.cameraPositionTarget.z + z));
+
+            CameraController.KillTween();
+
+            // Immediately apply if ease time is instant
+            if (CameraController.CameraEaseTime == 0)
+            {
+                Camera.originalPosition = Camera.cameraPositionTarget;
+            }
+
+            CameraController.isControllingCamera = true;
+        }
+
+
+
         /// <summary>
         /// Sets a custom camera rotation for any X, Y, Z value.
         /// </summary>
@@ -298,6 +323,26 @@ namespace UNANIMATED.CameraControl
             CameraController.KillRotTween();
 
             rotationTarget = new Vector3(x, y, z);
+
+            // Immediately apply if ease time is instant
+            if (CameraController.CameraRotEaseTime == 0)
+            {
+                Camera.offsetRotation = rotationTarget;
+            }
+        }
+
+
+
+        /// <summary>
+        /// Sets a custom camera rotation for any X, Y, Z value.
+        /// </summary>
+        /// <param name="point"></param>
+        public static void SetCustomCameraRotOffset(float x, float y, float z)
+        {
+            CameraController.requestingCameraRotChange = true;
+            CameraController.KillRotTween();
+
+            rotationTarget = new Vector3(rotationTarget.x + x, rotationTarget.y + y, rotationTarget.z + z);
 
             // Immediately apply if ease time is instant
             if (CameraController.CameraRotEaseTime == 0)
