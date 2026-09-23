@@ -70,9 +70,45 @@ namespace UNANIMATED.UI
                     __instance.display.transform.localScale = new Vector3(__instance.initialLocalScale.x, __instance.initialLocalScale.y * 1.5f, __instance.initialLocalScale.z);
                 }
                 __instance.display.alpha = currentAlpha;
+                return false;
             }
-            return false;
-            // else return true;
+            else return true;
+        }
+    }
+
+
+
+
+    [HarmonyPatch(typeof(RhythmController))]
+    [HarmonyPatch("UpdateTiming")]
+    internal class UpdateTimingPatch
+    {
+        static void Postfix(ref RhythmController __instance)
+        {
+            if (UNANIMATED.effectsEnabled && __instance.measureBarPrefab != null && FileStorage.options.isMeasureBarsOn && UIController.measureBarsParent != null)
+            {
+                __instance.measureBars[0].transform.parent = UIController.measureBarsParent;
+                __instance.measureBars[2].transform.parent = UIController.measureBarsParent;
+            }
+        }
+    }
+
+
+
+    [HarmonyPatch(typeof(ScaleOnSongStart))]
+    [HarmonyPatch("Update")]
+    internal class ScaleOnSongStartPatch
+    {
+        static bool Prefix(ref ScaleOnSongStart __instance)
+        {
+            if (UNANIMATED.effectsEnabled)
+            {
+                if (__instance.delayTimer == 10) __instance.transform.localScale = Vector3.SmoothDamp(__instance.transform.localScale, __instance.initScale, ref __instance.scaleVel, 0.3f);
+                else if (__instance.delayTimer == 20) __instance.transform.localScale = Vector3.SmoothDamp(__instance.transform.localScale, __instance.targetScale, ref __instance.scaleVel, 0.3f);
+                else return true;
+                return false;
+            }
+            else return true;
         }
     }
 }

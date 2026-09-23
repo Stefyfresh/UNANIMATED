@@ -294,11 +294,16 @@ namespace UNANIMATED.CameraControl
         /// Sets a custom camera point at any X, Y, Z value.
         /// </summary>
         /// <param name="point"></param>
-        public static void SetCustomCameraPointOffset(float x, float y, float z)
+        public static void SetCustomCameraPointOffset(float x, float y, float z, bool reverse = false)
         {
             CameraController.isControllingCamera = false;
 
-            Camera.SetTargetPoint(new Vector3(Camera.cameraPositionTarget.x + x, Camera.cameraPositionTarget.y + y, Camera.cameraPositionTarget.z + z));
+            if (!reverse) Camera.SetTargetPoint(new Vector3(Camera.cameraPositionTarget.x + x, Camera.cameraPositionTarget.y + y, Camera.cameraPositionTarget.z + z));
+            else
+            {
+                CameraController.requestingCameraPosChange = true;
+                Camera.originalPosition = new Vector3(Camera.originalPosition.x + x, Camera.originalPosition.y + y, Camera.originalPosition.z + z);
+            }
 
             CameraController.KillTween();
 
@@ -337,17 +342,18 @@ namespace UNANIMATED.CameraControl
         /// Sets a custom camera rotation for any X, Y, Z value.
         /// </summary>
         /// <param name="point"></param>
-        public static void SetCustomCameraRotOffset(float x, float y, float z)
+        public static void SetCustomCameraRotOffset(float x, float y, float z, bool reverse = false)
         {
             CameraController.requestingCameraRotChange = true;
             CameraController.KillRotTween();
 
-            rotationTarget = new Vector3(rotationTarget.x + x, rotationTarget.y + y, rotationTarget.z + z);
+            if (!reverse) rotationTarget = new Vector3(rotationTarget.x + x, rotationTarget.y + y, rotationTarget.z + z);
+            else Camera.offsetRotation = new Vector3(Camera.offsetRotation.x + x, Camera.offsetRotation.y + y, Camera.offsetRotation.z + z);
 
             // Immediately apply if ease time is instant
             if (CameraController.CameraRotEaseTime == 0)
             {
-                Camera.originalRotation = rotationTarget;
+                Camera.offsetRotation = rotationTarget;
             }
         }
 

@@ -28,7 +28,6 @@ namespace UNANIMATED.CameraControl
         public static bool requestingCameraRotChange;
         public static bool isControllingCamera;
         public static bool legacyCameraUnit;
-        public static bool singleCameraNotesAreInstant;
 
 
         public static float CameraEaseTime { get { return cameraEaseTimeOverride != null ? cameraEaseTimeOverride.Value : cameraEaseTime; } }
@@ -46,7 +45,6 @@ namespace UNANIMATED.CameraControl
             requestingCameraPosChange = false;
             requestingCameraRotChange = false;
             legacyCameraUnit = false;
-            singleCameraNotesAreInstant = false;
             KillTween();
             KillRotTween();
         }
@@ -55,49 +53,77 @@ namespace UNANIMATED.CameraControl
         public static void ParseCommand(CommandEventInfo currentCommand)
         {
             // Get relevant variables
+            float time = currentCommand.Duration / 1000f;
             CameraOverride type = currentCommand.GetEnumParamForced<CameraOverride>(0);
             float secondData = currentCommand.GetFloatParam(1);
             float thirdData = currentCommand.GetFloatParam(2);
             float fourthData = currentCommand.GetFloatParam(3);
-            float time = currentCommand.Duration / 1000f;
-
-            bool parseThisCommandTime = currentCommand.HasEndTime || singleCameraNotesAreInstant;
+            CameraAdditionalOptions additionalOptions = currentCommand.GetEnumParam<CameraAdditionalOptions>(4);
 
             // Logging
             UNANIMATED.Logger.LogInfo($"Parsed camera command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {time * 1000:0} ms");
 
 
             // Command logic
+            // if (additionalOptions != CameraAdditionalOptions.Normal)
+
+
             switch (type)
             {
                 case CameraOverride.CameraTarget:
-                    if (parseThisCommandTime) cameraEaseTimeOverride = new float?(time);
+                    if (currentCommand.HasEndTime) cameraEaseTimeOverride = time;
+                    else cameraEaseTimeOverride = null;
 
                     RhythmCameraHelpers.SetCameraPoint(currentCommand.GetEnumParamForced<CameraPoint>(1));
                     break;
 
                 case CameraOverride.CustomCameraTarget:
-                    if (parseThisCommandTime) cameraEaseTimeOverride = new float?(time);
+                    if (additionalOptions == CameraAdditionalOptions.StartPoint)
+                    {
+                        cameraEaseTimeOverride = 0;
+                        RhythmCameraHelpers.SetCustomCameraPoint(currentCommand.GetFloatParam(5), currentCommand.GetFloatParam(6), currentCommand.GetFloatParam(7));
+                    }
+                    if (currentCommand.HasEndTime || additionalOptions == CameraAdditionalOptions.Instant) cameraEaseTimeOverride = time;
+                    else cameraEaseTimeOverride = null;
+
 
                     RhythmCameraHelpers.SetCustomCameraPoint(secondData, thirdData, fourthData);
                     break;
 
                 case CameraOverride.CustomRotTarget:
-                    if (parseThisCommandTime) cameraRotEaseTimeOverride = new float?(time);
+                    if (additionalOptions == CameraAdditionalOptions.StartPoint)
+                    {
+                        cameraRotEaseTimeOverride = 0;
+                        RhythmCameraHelpers.SetCustomCameraRot(currentCommand.GetFloatParam(5), currentCommand.GetFloatParam(6), currentCommand.GetFloatParam(7));
+                    }
+                    if (currentCommand.HasEndTime || additionalOptions == CameraAdditionalOptions.Instant) cameraRotEaseTimeOverride = time;
+                    else cameraRotEaseTimeOverride = null;
 
                     RhythmCameraHelpers.SetCustomCameraRot(secondData, thirdData, fourthData);
                     break;
 
                 case CameraOverride.CustomCameraOffset:
-                    if (parseThisCommandTime) cameraEaseTimeOverride = new float?(time);
+                    if (additionalOptions == CameraAdditionalOptions.StartPoint)
+                    {
+                        cameraEaseTimeOverride = 0;
+                        RhythmCameraHelpers.SetCustomCameraPointOffset(currentCommand.GetFloatParam(5), currentCommand.GetFloatParam(6), currentCommand.GetFloatParam(7));
+                    }
+                    if (currentCommand.HasEndTime || additionalOptions == CameraAdditionalOptions.Instant) cameraEaseTimeOverride = time;
+                    else cameraEaseTimeOverride = null;
 
-                    RhythmCameraHelpers.SetCustomCameraPointOffset(secondData, thirdData, fourthData);
+                    RhythmCameraHelpers.SetCustomCameraPointOffset(secondData, thirdData, fourthData, additionalOptions == CameraAdditionalOptions.Reverse);
                     break;
 
                 case CameraOverride.CustomRotOffset:
-                    if (parseThisCommandTime) cameraRotEaseTimeOverride = new float?(time);
+                    if (additionalOptions == CameraAdditionalOptions.StartPoint)
+                    {
+                        cameraRotEaseTimeOverride = 0;
+                        RhythmCameraHelpers.SetCustomCameraRotOffset(currentCommand.GetFloatParam(5), currentCommand.GetFloatParam(6), currentCommand.GetFloatParam(7));
+                    }
+                    if (currentCommand.HasEndTime || additionalOptions == CameraAdditionalOptions.Instant) cameraRotEaseTimeOverride = time;
+                    else cameraRotEaseTimeOverride = null;
 
-                    RhythmCameraHelpers.SetCustomCameraRotOffset(secondData, thirdData, fourthData);
+                    RhythmCameraHelpers.SetCustomCameraRotOffset(secondData, thirdData, fourthData, additionalOptions == CameraAdditionalOptions.Reverse);
                     break;
 
                 case CameraOverride.EaseTime:
@@ -291,7 +317,7 @@ namespace UNANIMATED.CameraControl
             // FOV
             if (instance.camera.m_Lens.Aspect < 1.7)
             {
-                instance.camera.m_Lens.FieldOfView = Camera.HorizontalToVerticalFieldOfView(Camera.VerticalToHorizontalFieldOfView(cameraFOV, 1.778f), instance.camera.m_Lens.Aspect);
+                instance.camera.m_Lens.FieldOfView = UnityEngine.Camera.HorizontalToVerticalFieldOfView(UnityEngine.Camera.VerticalToHorizontalFieldOfView(cameraFOV, 1.778f), instance.camera.m_Lens.Aspect);
             }
             else
             {

@@ -12,11 +12,12 @@ namespace UNANIMATED.UI
         BlackBGBars = 16,
         FourByThreeBars = 32,
         Health = 64,
-        JudgementLine = 128,
-        MeasureBars = 256,
-        SpeedLines = 512,
-        UpNextIndicators = 1024,
-        Reticle = 2048,
-        Notes = 4096,
+        LeftJudgementLine = 128,
+        RightJudgementLine = 256,
+        MeasureBars = 512,
+        SpeedLines = 1024,
+        UpNextIndicators = 2048,
+        Reticle = 4096,
+        Notes = 8192,
     }
 }

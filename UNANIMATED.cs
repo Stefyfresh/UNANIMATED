@@ -32,7 +32,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.17";
+        public const string PLUGIN_VERSION = "0.1.18";
         internal static new ManualLogSource Logger;
 
 
@@ -90,13 +90,6 @@ namespace UNANIMATED
                 customUNANIMATEDSongs.ForEach((song) => song.forceStageScene = enableSceneSwitching.Value);
             };
         }
-
-        // public static bool IsEnabledOnChart()
-        // {
-        //     return RhythmController.Instance?.beatmap?.events != null
-        //         && RhythmController.Instance.beatmap.events.Count() > 0
-        //         && UNANIMATED.beatmapEvents.Any(e => e.Command == ControlCommand.UNANIMATED && e.GetEnumParam<GeneralOptions>(0) == GeneralOptions.LegacyCameraUnits)
-        // }
     }
 
 
@@ -174,7 +167,6 @@ namespace UNANIMATED
                         if (UNANIMATED.beatmapEvents.Any(e => e.Command == ControlCommand.UNANIMATED && e.GetEnumParam<GeneralOptions>(0) == GeneralOptions.SingleCameraNotesAreInstant))
                         {
                             UNANIMATED.Logger.LogInfo("Using single camera notes are instant.");
-                            CameraController.singleCameraNotesAreInstant = true;
                         }
 
 
@@ -201,10 +193,8 @@ namespace UNANIMATED
             // Reset variables
             UNANIMATED.videoEnabled = false;
             UNANIMATED.effectsEnabled = false;
-            // UNANIMATED.defaultStageScene = null;
             UNANIMATED.events = [];
             UNANIMATED.beatmapEvents = [];
-            // UNANIMATED.commands = new Queue<HitObjectInfo>();
 
             // Reset control classes
             CameraController.Reset();

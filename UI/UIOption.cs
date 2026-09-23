@@ -6,5 +6,7 @@ namespace UNANIMATED.UI
         ForceLockedUI,
         Hide,
         Show,
+        SlideIn,
+        SlideOut,
     }
 }

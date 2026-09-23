@@ -31,6 +31,12 @@ namespace UNANIMATED.UI
         public static Dictionary<UIType, List<Renderer>> uiElementRenderers = [];
         public static Dictionary<UIType, List<GameObject>> uiElementObjects = [];
         public static Dictionary<UIType, List<Graphic>> uiElementGraphics = [];
+        public static Dictionary<SlideUIType, RhythmGameSlideOutUI> uiSlideElements = [];
+        public static Dictionary<SlideUIType, List<ScaleOnSongStart>> uiScaleElements = [];
+
+
+        public static ToggleFourByThree toggleFourByThree;
+        public static Transform measureBarsParent;
 
 
         // States
@@ -65,27 +71,53 @@ namespace UNANIMATED.UI
             uiElementGraphics.TryAdd(UIType.VignetteBars, vignettes);
 
             // Black BG bars
-            uiElementRenderers.TryAdd(UIType.BlackBGBars, trans.GetComponentsInChildren<RotationJitter>()?.Select(e => e.GetComponent<Renderer>()).ToList());
+            RotationJitter[] bars = trans.GetComponentsInChildren<RotationJitter>();
+            uiElementRenderers.TryAdd(UIType.BlackBGBars, bars?.Select(e => e.GetComponent<Renderer>()).ToList());
+            uiScaleElements.TryAdd(SlideUIType.BlackBGBars, bars?.Select(e => e.GetComponent<ScaleOnSongStart>()).ToList());
 
             // 4x3
+            toggleFourByThree = trans.GetComponentInChildren<ToggleFourByThree>();
 
             // Health
             uiElementObjects.TryAdd(UIType.Health, [trans.GetComponentInChildren<RhythmHealthDisplay>(true)?.gameObject]);
 
             // Judgement line
-            List<Renderer> judgementLine = [];
-            judgementLine.AddRange(trans.Find("Left Guide")?.GetComponentsInChildren<Renderer>());
-            judgementLine.AddRange(trans.Find("Right Guide")?.GetComponentsInChildren<Renderer>());
-            uiElementRenderers.TryAdd(UIType.JudgementLine, judgementLine);
+            // List<Renderer> judgementLine = [];
+            // judgementLine.AddRange(trans.Find("Left Guide")?.GetComponentsInChildren<Renderer>());
+            // judgementLine.AddRange(trans.Find("Right Guide")?.GetComponentsInChildren<Renderer>());
+            uiElementRenderers.TryAdd(UIType.LeftJudgementLine, trans.Find("Left Guide")?.GetComponentsInChildren<Renderer>().ToList());
+            uiElementRenderers.TryAdd(UIType.RightJudgementLine, trans.Find("Right Guide")?.GetComponentsInChildren<Renderer>().ToList());
 
             // Measure bars
-
+            GameObject measureBarsParentObject = new("MeasureBars");
+            measureBarsParentObject.transform.parent = controller.transform;
+            measureBarsParent = measureBarsParentObject.transform;
+            uiElementObjects.TryAdd(UIType.MeasureBars, [measureBarsParentObject]);
 
             // Speed lines
             uiElementGraphics.TryAdd(UIType.SpeedLines, [trans.Find("RhythmUI/DrawMaskCanvas?/BackgroundSpeedLines")?.GetComponent<Image>()]);
 
             // Reticle
             uiElementObjects.TryAdd(UIType.Reticle, [trans.GetComponentInChildren<ToggleReticle>()?.gameObject]);
+
+            // Slide UI
+            RhythmGameSlideOutUI[] slideElements = trans.GetComponentsInChildren<RhythmGameSlideOutUI>();
+            foreach (RhythmGameSlideOutUI elem in slideElements)
+            {
+                if (elem.name == "UiParentCanvas") uiSlideElements.TryAdd(SlideUIType.AllOverlayUI, elem);
+                if (elem.name == "Right Guide") uiSlideElements.TryAdd(SlideUIType.RightJudgementLine, elem);
+                if (elem.name == "Left Guide") uiSlideElements.TryAdd(SlideUIType.LeftJudgementLine, elem);
+                if (elem.name == "BackgroundFade") uiSlideElements.TryAdd(SlideUIType.BackgroundGradient, elem);
+                if (elem.name == "HealthBar") uiSlideElements.TryAdd(SlideUIType.HealthBar, elem);
+                if (elem.name == "BackgroundSpeedLines") uiSlideElements.TryAdd(SlideUIType.SpeedLines, elem);
+            }
+
+            // Up next
+            uiElementObjects.TryAdd(UIType.UpNextIndicators, [controller.upNextIndicatorLeft.gameObject, controller.upNextIndicatorRight.gameObject]);
+
+
+            // Notes
+            uiElementObjects.TryAdd(UIType.Notes, [controller.noteGroup]);
         }
 
         public static void Reset()
@@ -94,6 +126,10 @@ namespace UNANIMATED.UI
             uiElementGraphics = [];
             uiElementObjects = [];
             uiElementRenderers = [];
+            uiSlideElements = [];
+            uiScaleElements = [];
+            toggleFourByThree = null;
+            measureBarsParent = null;
         }
 
         public static void ParseCommand(CommandEventInfo currentCommand)
@@ -102,6 +138,8 @@ namespace UNANIMATED.UI
             UIOption type = currentCommand.GetEnumParamForced<UIOption>(0);
             bool enabled = currentCommand.GetBoolParam(1, true);
             Enum.TryParse(currentCommand.GetStringParam(1).Replace('|', ','), out UIType elements);
+            Enum.TryParse(currentCommand.GetStringParam(1).Replace('|', ','), out SlideUIType slideElements);
+
             float time = currentCommand.Duration / 1000f;
 
             // Logging
@@ -117,38 +155,21 @@ namespace UNANIMATED.UI
                     forceLockedUI = enabled;
                     break;
 
-                case UIOption.Hide:
-                    SetUIState(elements, time, false);
-                    break;
-
                 case UIOption.Show:
                     SetUIState(elements, time, true);
                     break;
 
-                    // default:
-                    //     {
-                    //         if (time >= 0)
-                    //         {
-                    //             // Command has a time
-                    //             switch (type)
-                    //             {
-                    //                 case UIOption.Hide:
+                case UIOption.Hide:
+                    SetUIState(elements, time, false);
+                    break;
 
-                    //                     break;
-                    //             }
+                case UIOption.SlideIn:
+                    SetUISlideState(slideElements, true);
+                    break;
 
-                    //         }
-                    //         else
-                    //         {
-                    //             // Command is instant
-                    //             switch (type)
-                    //             {
-                    //                 case UIOption.Hide:
-                    //                     break;
-                    //             }
-                    //         }
-                    //     }
-                    //     break;
+                case UIOption.SlideOut:
+                    SetUISlideState(slideElements, false);
+                    break;
             }
         }
 
@@ -167,9 +188,51 @@ namespace UNANIMATED.UI
 
                     // Tween the alpha of any graphics
                     if (uiElementGraphics.TryGetValue(uiType, out List<Graphic> graphics)) graphics.ForEach(g => DOFade(g, enabled ? 1 : 0, time));
+
+                    // Special cases
+                    if (uiType == UIType.FourByThreeBars)
+                    {
+                        toggleFourByThree.animator.Play(enabled ? "4x3TransitionIn" : "4x3TransitionOut", -1, 0.99f);
+                    }
                 }
             }
         }
+
+
+        private static void SetUISlideState(SlideUIType elements, bool enabled)
+        {
+            foreach (SlideUIType uiType in Enum.GetValues(typeof(SlideUIType)))
+            {
+                if (elements.HasFlag(uiType))
+                {
+                    if (uiSlideElements.TryGetValue(uiType, out RhythmGameSlideOutUI slideUI))
+                    {
+                        slideUI._startedIDK = true;
+
+                        bool original = slideUI.rhythmController.hideUIOnStart;
+                        slideUI.rhythmController.hideUIOnStart = true;
+
+                        if (enabled) slideUI.OnPlay();
+                        else slideUI.Complete(true);
+
+                        slideUI.rhythmController.hideUIOnStart = original;
+                    }
+
+                    if (uiScaleElements.TryGetValue(uiType, out List<ScaleOnSongStart> scaleUIs) && scaleUIs != null)
+                    {
+                        scaleUIs.ForEach(scale => scale.delayTimer = enabled ? 20 : 10);
+                    }
+
+                    // Special cases
+                    if (uiType == SlideUIType.FourByThreeBars)
+                    {
+                        toggleFourByThree.useFourByThree = enabled;
+                    }
+                }
+            }
+        }
+
+
 
         private static void DOFade(Graphic target, float endValue, float time)
         {
