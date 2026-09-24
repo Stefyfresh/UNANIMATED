@@ -87,8 +87,8 @@ namespace UNANIMATED.UI
         {
             if (UNANIMATED.effectsEnabled && __instance.measureBarPrefab != null && FileStorage.options.isMeasureBarsOn && UIController.measureBarsParent != null)
             {
-                __instance.measureBars[0].transform.parent = UIController.measureBarsParent;
-                __instance.measureBars[2].transform.parent = UIController.measureBarsParent;
+                if (__instance.measureBars[0] && __instance.measureBars[0].transform.parent == __instance.transform) __instance.measureBars[0].transform.parent = UIController.measureBarsParent;
+                if (__instance.measureBars[2] && __instance.measureBars[2].transform.parent == __instance.transform) __instance.measureBars[2].transform.parent = UIController.measureBarsParent;
             }
         }
     }
