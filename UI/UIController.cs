@@ -46,6 +46,13 @@ namespace UNANIMATED.UI
         {
             Transform trans = controller.transform.parent;
 
+            // // Fix the UI canvas position and scale
+            // Transform parentCanvas = trans.Find("RhythmUI/UiParentCanvas");
+            // parentCanvas.localScale = UIDefaults.uiParentCanvasScale;
+            // // parentCanvas.position = RhythmCamera.instance.transform.position;
+            // // trans.Find("RhythmUI/UiParentCanvas/UiParent");
+
+
             // Score
             uiElementGraphics.TryAdd(UIType.Score, [trans.GetComponentInChildren<RhythmScoreDisplay>(true)?.GetComponent<TextMeshProUGUI>()]);
 
@@ -114,7 +121,6 @@ namespace UNANIMATED.UI
 
             // Up next
             uiElementObjects.TryAdd(UIType.UpNextIndicators, [controller.upNextIndicatorLeft.gameObject, controller.upNextIndicatorRight.gameObject]);
-
 
             // Notes
             uiElementObjects.TryAdd(UIType.Notes, [controller.noteGroup]);
@@ -238,12 +244,6 @@ namespace UNANIMATED.UI
         {
             TweenerCore<Color, Color, ColorOptions> tweenerCore = DOTween.ToAlpha(() => target.color, delegate (Color x) { target.color = x; }, endValue, time);
             tweenerCore.SetTarget(target);
-        }
-
-
-        public static class Defaults
-        {
-            public static readonly float canvasCamFollowerScale = 0.1069f;
         }
     }
 }

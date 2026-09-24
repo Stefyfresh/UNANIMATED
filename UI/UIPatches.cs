@@ -19,7 +19,9 @@ namespace UNANIMATED.UI
                     __instance.transform.localPosition = __instance.offset ? (__instance.goToTarget - __instance._firstCameraPos) : __instance.goToTarget;
                     if (__instance.name == "UiParentCanvas" && __instance.transform.childCount > 0)
                     {
-                        __instance.transform.GetChild(0).localRotation = RhythmCamera.instance.gameObject.transform.localRotation;
+                        Transform child = __instance.transform.GetChild(0);
+                        child.localRotation = RhythmCamera.instance.gameObject.transform.localRotation;
+                        // child.position = RhythmCamera.instance.transform.position;
 
                         // tan(theta) / tan(30)
                         float multiplier = Mathf.Tan(CameraController.cameraFOV / 2 * Mathf.Deg2Rad) / 0.57735f;
