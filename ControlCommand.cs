@@ -9,7 +9,7 @@ namespace UNANIMATED
         Character = 4,
         Gameplay,
         UI,
-        UIColour,
+        Visuals,
         StageScene,
 
 

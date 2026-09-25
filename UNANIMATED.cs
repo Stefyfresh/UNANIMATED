@@ -32,7 +32,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.19";
+        public const string PLUGIN_VERSION = "0.1.20";
         internal static new ManualLogSource Logger;
 
 
@@ -146,12 +146,8 @@ namespace UNANIMATED
 
                         // Get GameObjects
                         ShaderMaskingController.GetCorrectShaders();
-                        VisualController.Init();
+                        VisualController.Init(__instance);
                         UIController.Init(__instance);
-
-
-                        // Log success
-                        UNANIMATED.Logger.LogInfo($"Effects and animations enabled for chart {__instance.beatmap.metadata.title}!");
 
 
                         // Preload scenes if necessary
@@ -172,6 +168,10 @@ namespace UNANIMATED
 
                         // Start up NOISZ controller
                         NOISZStageController.Init(__instance);
+
+
+                        // Log success
+                        UNANIMATED.Logger.LogInfo($"Effects and animations enabled for chart {__instance.beatmap.metadata.title}!");
                     }
                 }
             }
@@ -260,6 +260,10 @@ namespace UNANIMATED
                     else if (commandType == ControlCommand.StageScene)
                     {
                         SceneController.SwitchSceneCommand(currentCommandEvent);
+                    }
+                    else if (commandType == ControlCommand.Visuals)
+                    {
+                        VisualController.ParseCommand(currentCommandEvent);
                     }
                     else
                     {

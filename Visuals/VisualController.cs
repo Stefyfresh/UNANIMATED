@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+using Overworld;
 using Rhythm;
 using UnityEngine;
 
@@ -5,8 +8,6 @@ namespace UNANIMATED.Visuals
 {
     public static class VisualController
     {
-        public static bool isInverted;
-
         // ---- Materials ---- 
         public static Material invertMaterial;
         // Above scene elements, guides, speed lines, measure bars, player, below everything else
@@ -20,17 +21,51 @@ namespace UNANIMATED.Visuals
         public static Material twinBarMaterial;
         // Below vignette and score, above everything else 
 
+        // Other
+        public static List<DayNightSystem> dayNightSystems = [];
+
+        // States
+        public static bool isInverted;
+
+
+        public static void Init(RhythmController controller)
+        {
+            dayNightSystems = Object.FindObjectsByType(typeof(DayNightSystem), FindObjectsInactive.Include, FindObjectsSortMode.None).Cast<DayNightSystem>().ToList();
+
+            foreach (DayNightSystem dayNight in dayNightSystems)
+            {
+                dayNight.RefreshOnEnable = true;
+                dayNight.enabled = true;
+                dayNight.UpdateDayTimeSettings(true);
+                // dayNight.previousDay = dayNight.currentDay;
+                // dayNight.previousTime = dayNight.currentTime;
+
+                // // Set the default weather with the existing preview day and time
+                // dayNight.GetDayTime(true, out var day, out var time);
+                // Day customDay = new()
+                // {
+                //     timeSlots = [new TimeSlots() {
+                //         weather = dayNight.days[day].timeSlots[time].weather,
+                //         dependentObjects = [null]
+                //     }]
+                // };
+
+                // dayNight.days.Add(customDay);
+            }
+        }
+
 
         public static void Reset()
         {
             isInverted = false;
+            dayNightSystems = [];
         }
 
         public static void ParseCommand(CommandEventInfo currentCommand)
         {
             // Get relevant variables
-            VisualOption type = System.Enum.Parse<VisualOption>(currentCommand.GetStringParam(0));
-            bool enabled = currentCommand.GetBoolParam(1);
+            VisualOption type = currentCommand.GetEnumParamForced<VisualOption>(0);
+            // bool enabled = currentCommand.GetBoolParam(1);
             float time = currentCommand.Duration;
 
             // Logging
@@ -42,9 +77,14 @@ namespace UNANIMATED.Visuals
                 case VisualOption.Reset:
                     Reset();
                     break;
-                case VisualOption.Invert:
-
+                case VisualOption.TimeAndWeather:
+                    SetTimeAndWeather(currentCommand.GetEnumParamForced<TimeAndWeatherOption>(1));
                     break;
+
+
+                    // case VisualOption.Invert:
+
+                    //     break;
 
                     // default:
                     //     {
@@ -71,11 +111,64 @@ namespace UNANIMATED.Visuals
             }
         }
 
-
-
-        public static void Init()
+        private static void SetTimeAndWeather(TimeAndWeatherOption mode)
         {
-            GameObject.Find("/Rhythm Game Container/RhythmUI/UiParentCanvas/UiParent/Masks/BackgroundDim");
+            foreach (DayNightSystem dayNight in dayNightSystems)
+            {
+                int currentDay = dayNight.previewDay;
+                int currentTime = dayNight.previewTime;
+
+                if (mode != TimeAndWeatherOption.Reset)
+                {
+                    dayNight.SetWeatherOverride(mode.ToString());
+                }
+                else
+                {
+                    dayNight.UpdateDayTimeSettings(true);
+                }
+
+                // // Remove old custom weather
+                // dayNight.days.RemoveAt(dayNight.days.Count() - 1);
+
+                // Day customDay;
+
+                // if (mode != TimeAndWeatherOption.Reset)
+                // {
+                //     // Create custom day with desired weather
+                //     customDay = new()
+                //     {
+                //         timeSlots = [new TimeSlots() {
+                //             weather = mode.ToString(),
+                //             dependentObjects = [null]
+                //         }]
+                //     };
+
+                //     dayNight.previewDay = dayNight.days.Count() - 1;
+                //     dayNight.previewTime = 0;
+                // }
+                // else
+                // {
+                //     // Set the default weather with the existing preview day and time
+                //     dayNight.GetDayTime(true, out var day, out var time);
+                //     customDay = new()
+                //     {
+                //         timeSlots = [new TimeSlots() {
+                //         weather = dayNight.days[day].timeSlots[time].weather,
+                //         dependentObjects = [null]
+                //     }]
+                //     };
+                // }
+
+                // // Add custom day
+                // dayNight.days.Add(customDay);
+
+
+                // dayNight.previousDay = dayNight.currentDay;
+                // dayNight.previousTime = dayNight.currentTime;
+
+                dayNight.previewDay = currentDay;
+                dayNight.previewTime = currentTime;
+            }
         }
     }
 }
