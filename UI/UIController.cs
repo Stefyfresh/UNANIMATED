@@ -143,8 +143,8 @@ namespace UNANIMATED.UI
             // Get relevant variables
             UIOption type = currentCommand.GetEnumParamForced<UIOption>(0);
             bool enabled = currentCommand.GetBoolParam(1, true);
-            Enum.TryParse(currentCommand.GetStringParam(1).Replace('|', ','), out UIType elements);
-            Enum.TryParse(currentCommand.GetStringParam(1).Replace('|', ','), out SlideUIType slideElements);
+            Enum.TryParse(currentCommand.GetStringParam(1).Replace('|', ',').Replace(';', ','), out UIType elements);
+            Enum.TryParse(currentCommand.GetStringParam(1).Replace('|', ',').Replace(';', ','), out SlideUIType slideElements);
 
             float time = currentCommand.Duration / 1000f;
 
