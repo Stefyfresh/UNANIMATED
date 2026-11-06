@@ -37,14 +37,21 @@ namespace UNANIMATED.Character
         //     new("Quaver (Shrimp)", true),
         // };
 
+        public static void Init(RhythmController controller)
+        {
+            GameObject charSpawnerGO = GameObject.Find("Arcade Character Spawner");
+            Reset();
+            spawner = charSpawnerGO.GetComponent<RhythmCharacterSelector>();
+        }
+
+
+
         public static void Reset()
         {
             customPrimaryCharacter = FileStorage.beatmapOptions.primaryCharacter;
             customSecondaryCharacter = FileStorage.beatmapOptions.primaryCharacter;
             // spawner = null;
         }
-
-
 
 
 

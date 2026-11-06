@@ -42,7 +42,7 @@ namespace UNANIMATED.StageScene
 
 
     [HarmonyPatch(typeof(BeatmapIndex.Song))]
-    [HarmonyPatch("AddBeatmapToCustomSong")]
+    [HarmonyPatch(nameof(BeatmapIndex.Song.AddBeatmapToCustomSong))]
     internal class AddBeatmapToCustomSongPatch
     {
         private static void Postfix(ref BeatmapIndex.Song __instance, Beatmap beatmap)

@@ -32,7 +32,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.20";
+        public const string PLUGIN_VERSION = "0.1.22";
         internal static new ManualLogSource Logger;
 
 
@@ -84,11 +84,22 @@ namespace UNANIMATED
                 true,
                 "Enables UNANIMATED's scene switching feature. If disabled, it will use the default or currently selected scene.\nScene switching has a memory and performance impact so this is included in case that is not desired."
             );
+
+            // enableForcedDefaultStage = Config.Bind(
+            //     "General",
+            //     "EnableSceneSwitching",
+            //     true,
+            //     "Enables UNANIMATED's scene switching feature. If disabled, it will use the default or currently selected scene.\nScene switching has a memory and performance impact so this is included in case that is not desired."
+            // );
+
             // Reload the songs
             enableSceneSwitching.SettingChanged += (s, r) =>
             {
                 customUNANIMATEDSongs.ForEach((song) => song.forceStageScene = enableSceneSwitching.Value);
             };
+
+            // Initialize Actions
+            SceneController.onScenePreloadComplete += VisualController.GetDayNightSystems;
         }
     }
 
@@ -138,13 +149,9 @@ namespace UNANIMATED
                             if (option == GeneralOptions.ShowBackgroundVideo) UNANIMATED.videoEnabled = true;
                         }
 
-                        // set up characters
-                        GameObject charSpawnerGO = GameObject.Find("Arcade Character Spawner");
-                        Character.CharacterController.Reset();
-                        Character.CharacterController.spawner = charSpawnerGO.GetComponent<RhythmCharacterSelector>();
 
-
-                        // Get GameObjects
+                        // Initialize control classes
+                        Character.CharacterController.Init(__instance);
                         ShaderMaskingController.GetCorrectShaders();
                         VisualController.Init(__instance);
                         UIController.Init(__instance);

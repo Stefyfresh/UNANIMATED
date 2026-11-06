@@ -18,12 +18,11 @@ namespace UNANIMATED.StageScene
         // Constants
         public static readonly string rhythmGameContainerName = "Rhythm Game Container";
         public static readonly string noiszStageName = "NOISZRhythm";
-
         public static readonly string maskCameraName = "SpriteMaskCam";
         public static readonly string controllerPositionsObjectName = "UNANIMATED Controller Positions";
         public static readonly string characterSpawnerName = "Arcade Character Spawner";
-        public static readonly string[] disallowedObjectNames = ["Rhythm Game Container", "Arcade Character Spawner", "_CameraOperatorOffsetLookatTarget", "_CameraOperatorOffsetFollowTarget", "PersistentStorage"];
-        public static readonly string[] skippedObjectNames = ["UNANIMATED Controller Positions", "MVPlayer", "Timer Canvas Object"];
+        public static readonly string[] disallowedObjectNames = [rhythmGameContainerName, "Arcade Character Spawner", "_CameraOperatorOffsetLookatTarget", "_CameraOperatorOffsetFollowTarget", "PersistentStorage"];
+        public static readonly string[] skippedObjectNames = [controllerPositionsObjectName, "MVPlayer", "Timer Canvas Object"];
         public static readonly string[] scenesWithNoBackgroundFade = ["DreamReflection", "GreenscreenRhythm", "PlaybackStage"];
 
 
@@ -45,6 +44,9 @@ namespace UNANIMATED.StageScene
         // public static Dictionary<string, GameObject[]> sceneObjectsToDisable = [];
         // public static Dictionary<string, GameObject[]> sceneObjectsToEnable = [];
 
+        // Actions
+        public static Action onScenePreloadComplete;
+
 
         public static void RunPreloadScenes()
         {
@@ -61,6 +63,9 @@ namespace UNANIMATED.StageScene
 
                     // Ensure no awake calls execute and override the code that we need
                     preloadingScenes = true;
+
+                    // Disable pausing while preloading
+                    JeffBezosController.canPause = false;
 
                     // Add current scene
                     sceneEvents.Add(new CommandEventInfo(new EventInfo() { eventParams = [SceneManager.GetActiveScene().name] }));
@@ -112,16 +117,15 @@ namespace UNANIMATED.StageScene
                 if (!isStartingScene)
                 {
                     AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
-
                     while (!asyncLoad.isDone)
                     {
-                        // JeffBezosController.SetTimeScale(0, 0);
                         yield return null;
                     }
                 }
 
                 // Set parameters
                 JeffBezosController.SetTimeScale(0, 0);
+                JeffBezosController.canPause = false;
 
                 // Get the newly loaded scene reference
                 Scene loadedScene = SceneManager.GetSceneByName(sceneName);
@@ -168,7 +172,16 @@ namespace UNANIMATED.StageScene
                             root.GetComponent<CinemachineBrain>()?.ManualUpdate();
                         }
 
-                        if (root.activeSelf && !skippedObjectNames.Contains(root.name))
+                        // Deal with the pause menu canvases
+                        PauseMenu pauseMenu = root.GetComponentInChildren<PauseMenu>();
+                        if (pauseMenu && pauseMenu.transform.parent != null)
+                        {
+                            if (isStartingScene) pauseMenu.transform.parent.SetParent(null, true);
+                            else pauseMenu.transform.parent.gameObject.SetActive(false);
+                        }
+
+                        // Set the state of the object and the transform
+                        if (root.activeSelf && !IsSkippedObject(root))
                         {
                             if (IsRootBackgroundObject(root.name))
                             {
@@ -180,7 +193,6 @@ namespace UNANIMATED.StageScene
                                 root.SetActive(false);
                             }
                         }
-
                     }
 
                     // Set and store the root object
@@ -216,18 +228,18 @@ namespace UNANIMATED.StageScene
             // {
             //     UNANIMATED.Logger.LogError($"Failed to preload scenes! {ex.Message}\n{ex.StackTrace}");
             // }
+
+            onScenePreloadComplete?.Invoke();
         }
 
 
 
         private static IEnumerator BlockWhilePreloading()
         {
-            yield return new WaitForEndOfFrame();
-
             // Main loop
             while (preloadingScenes)
             {
-                // JeffBezosController.SetTimeScale(0, 0);
+                JeffBezosController.canPause = false;
                 yield return null;
             }
 
@@ -235,6 +247,7 @@ namespace UNANIMATED.StageScene
             yield return new WaitForEndOfFrame();
             JeffBezosController.SetTimeScale(Mathf.Abs(RhythmController.Instance.timeScale), 0f);
             LevelManager.sceneHasLoaded = true;
+            JeffBezosController.canPause = true;
         }
 
 
@@ -367,6 +380,13 @@ namespace UNANIMATED.StageScene
                 if (name.StartsWith(str, StringComparison.Ordinal)) return false;
             }
             return true;
+        }
+
+
+
+        private static bool IsSkippedObject(GameObject gameObject)
+        {
+            return skippedObjectNames.Contains(gameObject.name);
         }
 
 

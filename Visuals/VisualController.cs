@@ -27,10 +27,15 @@ namespace UNANIMATED.Visuals
         // States
         public static bool isInverted;
 
-
         public static void Init(RhythmController controller)
         {
-            dayNightSystems = Object.FindObjectsByType(typeof(DayNightSystem), FindObjectsInactive.Include, FindObjectsSortMode.None).Cast<DayNightSystem>().ToList();
+            Reset();
+        }
+
+
+        public static void GetDayNightSystems()
+        {
+            dayNightSystems = Object.FindObjectsByType<DayNightSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None).Cast<DayNightSystem>().ToList();
 
             foreach (DayNightSystem dayNight in dayNightSystems)
             {
