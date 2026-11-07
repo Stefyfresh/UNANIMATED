@@ -40,7 +40,7 @@ namespace UNANIMATED.Visuals
 
             foreach (DayNightSystem dayNight in dayNightSystems)
             {
-                dayNight.RefreshOnEnable = false;
+                dayNight.RefreshOnEnable = true;
                 dayNight.enabled = true;
                 dayNight.UpdateDayTimeSettings(true);
                 // dayNight.previousDay = dayNight.currentDay;
