@@ -32,7 +32,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.22";
+        public const string PLUGIN_VERSION = "0.1.23";
         internal static new ManualLogSource Logger;
 
 

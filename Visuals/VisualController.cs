@@ -26,6 +26,7 @@ namespace UNANIMATED.Visuals
 
         // States
         public static bool isInverted;
+        public static TimeAndWeatherOption currentTimeAndWeather;
 
         public static void Init(RhythmController controller)
         {
@@ -39,7 +40,7 @@ namespace UNANIMATED.Visuals
 
             foreach (DayNightSystem dayNight in dayNightSystems)
             {
-                dayNight.RefreshOnEnable = true;
+                dayNight.RefreshOnEnable = false;
                 dayNight.enabled = true;
                 dayNight.UpdateDayTimeSettings(true);
                 // dayNight.previousDay = dayNight.currentDay;
@@ -71,7 +72,7 @@ namespace UNANIMATED.Visuals
             // Get relevant variables
             VisualOption type = currentCommand.GetEnumParamForced<VisualOption>(0);
             // bool enabled = currentCommand.GetBoolParam(1);
-            float time = currentCommand.Duration;
+            float time = currentCommand.Duration / 1000f;
 
             // Logging
             UNANIMATED.Logger.LogInfo($"Parsed visuals command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {time:0} ms");
@@ -83,7 +84,7 @@ namespace UNANIMATED.Visuals
                     Reset();
                     break;
                 case VisualOption.TimeAndWeather:
-                    SetTimeAndWeather(currentCommand.GetEnumParamForced<TimeAndWeatherOption>(1));
+                    SetTimeAndWeather(currentCommand.GetEnumParamForced<TimeAndWeatherOption>(1), time);
                     break;
 
 
@@ -116,21 +117,38 @@ namespace UNANIMATED.Visuals
             }
         }
 
-        private static void SetTimeAndWeather(TimeAndWeatherOption mode)
+        private static void SetTimeAndWeather(TimeAndWeatherOption mode, float duration)
         {
             foreach (DayNightSystem dayNight in dayNightSystems)
             {
+                dayNight.StopAllCoroutines();
+
                 int currentDay = dayNight.previewDay;
                 int currentTime = dayNight.previewTime;
 
-                if (mode != TimeAndWeatherOption.Reset)
+                if (duration <= 0)
                 {
-                    dayNight.SetWeatherOverride(mode.ToString());
+                    if (mode != TimeAndWeatherOption.Reset)
+                    {
+                        dayNight.SetWeatherOverride(mode.ToString());
+                    }
+                    else
+                    {
+                        dayNight.UpdateDayTimeSettings(true);
+                    }
                 }
                 else
                 {
-                    dayNight.UpdateDayTimeSettings(true);
+                    string newWeather = mode.ToString();
+                    string prevWeather = currentTimeAndWeather.ToString();
+
+                    dayNight.GetDayTime(true, out int day, out int time);
+                    if (mode == TimeAndWeatherOption.Reset) newWeather = dayNight.days[day].timeSlots[time].weather;
+                    if (currentTimeAndWeather == TimeAndWeatherOption.Reset) prevWeather = dayNight.days[day].timeSlots[time].weather;
+
+                    dayNight.SetWeatherOverrideLerp(newWeather, prevWeather, duration);
                 }
+
 
                 // // Remove old custom weather
                 // dayNight.days.RemoveAt(dayNight.days.Count() - 1);
@@ -173,6 +191,8 @@ namespace UNANIMATED.Visuals
 
                 dayNight.previewDay = currentDay;
                 dayNight.previewTime = currentTime;
+
+                currentTimeAndWeather = mode;
             }
         }
     }
