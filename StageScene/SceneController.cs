@@ -79,6 +79,10 @@ namespace UNANIMATED.StageScene
                     UNANIMATED.Logger.LogInfo("Stage scene commands detected in events but stage switching is not enabled. Not preloading scenes.");
                 }
             }
+            else
+            {
+                onScenePreloadComplete?.Invoke();
+            }
         }
 
         private static IEnumerator PreloadScenes()
@@ -178,6 +182,7 @@ namespace UNANIMATED.StageScene
                         {
                             if (isStartingScene) pauseMenu.transform.parent.SetParent(null, true);
                             else pauseMenu.transform.parent.gameObject.SetActive(false);
+                            continue;
                         }
 
                         // Set the state of the object and the transform
