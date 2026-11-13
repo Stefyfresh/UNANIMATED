@@ -6,6 +6,8 @@ A custom animation system mod for the hit rhythm game UNBEATABLE!
 
 This mod makes charting for Arcade Mode much more visually interesting than the base game.
 
+<br>
+
 Disclaimer: This is not affiliated with or endorsed by D-CELL GAMES.
 
 ## Features
