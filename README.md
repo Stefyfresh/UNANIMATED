@@ -6,13 +6,15 @@ A custom animation system mod for the hit rhythm game UNBEATABLE!
 
 This mod makes charting for Arcade Mode much more visually interesting than the base game.
 
+Disclaimer: This is not affiliated with or endorsed by D-CELL GAMES.
+
 ## Features
 
 This list of features is currently implemented in the mod!
 
 - Full control over the camera, its position, rotation, FOV, easing, etc.
 - Background video support in any stage
-- Swappable stages
+- Swappable stages mid-chart
 - Swappable characters
 
 ## Planned Features
@@ -24,38 +26,22 @@ These features are planned, but I have no guarantee that I will implement all of
 - SV/scroll speed control
 - More..?
 
+## Example
+
+Here's a sample of what is currently possible in UNANIMATED! This is a custom chart by m created using UNANIMATED.
+
+[![Watch Cubibibibism - Charted by m](https://img.youtube.com/vi/wSu1m1tlO0w/0.jpg)](https://www.youtube.com/watch?v=wSu1m1tlO0w)
+
 ## Configuration
 
 The format of the mod is still being finalized, check back later!
 
----
-
 ## Mod Installation Instructions
 
-- Download the latest release of the mod from the releases page, and extract the DLL file from inside the zip
-- Download BepInEx from [here](https://github.com/BepInEx/BepInEx/releases) and extract the BepInEx folder from the zip into the main UNBEATABLE game code folder (the one that contains UNBEATABLE.exe). You must extract ALL the files from that zip into the main UNBEATABLE folder (do NOT make a new folder!)
-- Run the game once and close it
-- Put the mod DLL into the BepInEx\plugins folder
+For installation instructions, refer to my mod installation guide here:
 
-The structure should then be:
+https://gist.github.com/Stefyfresh/1140bf18c5f3895bd807258c16483887
 
-<pre>
-UNBEATABLE
-├─── UNBEATABLE.exe
-├─── UNBEATABLE_Data
-├─── {some other folders and files}
-├─── .doorstop_version
-├─── changelog.txt
-├─── doorstop_config.ini
-├─── winhttp.dll
-└─── BepInEx
-    ├─── cache
-    ├─── config
-    ├─── core
-    ├─── patchers
-    └─── plugins
-        ├─── SomeMod.dll
-        └─── SomeOtherMod.dll
-</pre>
+---
 
-Once the mod is in the folder, restart the game and it should load.
+###### All code for UNANIMATED was written by me, by hand.
