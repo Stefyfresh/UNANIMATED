@@ -3,7 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>UNANIMATED</AssemblyName>
+    <RootNamespace>UNANIMATED</RootNamespace>
     <Version>0.1.0</Version>
+    <Description>https://github.com/Stefyfresh/UNANIMATED</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
@@ -11,7 +13,6 @@
       https://nuget.bepinex.dev/v3/index.json;
       https://nuget.samboy.dev/v3/index.json
     </RestoreAdditionalProjectSources>
-    <RootNamespace>UNANIMATED</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
