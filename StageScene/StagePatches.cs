@@ -9,23 +9,6 @@ using UnityEngine.SceneManagement;
 
 namespace UNANIMATED.StageScene
 {
-    // [HarmonyPatch(typeof(BeatmapParserEngine))]
-    // [HarmonyPatch("ParseLineGeneral")]
-    // internal class ParseLineGeneralPatch
-    // {
-    //     static void Postfix(string line)
-    //     {
-    //         string[] array = line.Split(':');
-
-    //         if (array[0] == "DefaultStageScene")
-    //         {
-    //             UNANIMATED.defaultStageScene = array[1].Trim();
-    //         }
-    //     }
-    // }
-
-
-
     [HarmonyPatch(typeof(BeatmapParserEngine))]
     [HarmonyPatch("ParseLine")]
     internal class ParseLinePatch
@@ -73,7 +56,7 @@ namespace UNANIMATED.StageScene
                             UNANIMATED.Logger.LogInfo($"Setting stage to {defaultStageScene} on song {beatmap.metadata.title}");
 
                             __instance.stageScene = defaultStageScene;
-                            __instance.forceStageScene = UNANIMATED.enableSceneSwitching.Value;
+                            __instance.forceStageScene = UNANIMATED.enableForcedDefaultStage.Value;
                         }
                         else
                         {

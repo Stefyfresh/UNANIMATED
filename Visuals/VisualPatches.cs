@@ -20,19 +20,18 @@ namespace UNANIMATED.Visuals
     }
 
 
-
-    [HarmonyPatch(typeof(DayNightSystem))]
-    [HarmonyPatch(nameof(DayNightSystem.OnEnable))]
-    internal class DayNightSystemOnEnablePatch
-    {
-        static bool Prefix(ref DayNightSystem __instance)
-        {
-            if (UNANIMATED.effectsEnabled && VisualController.currentTimeAndWeather != TimeAndWeatherOption.Reset)
-            {
-                __instance.SetWeatherOverride(VisualController.currentTimeAndWeather.ToString());
-                return false;
-            }
-            else return true;
-        }
-    }
+    // [HarmonyPatch(typeof(DayNightSystem))]
+    // [HarmonyPatch(nameof(DayNightSystem.OnEnable))]
+    // internal class DayNightSystemOnEnablePatch
+    // {
+    //     static bool Prefix(ref DayNightSystem __instance)
+    //     {
+    //         if (UNANIMATED.effectsEnabled && VisualController.currentTimeAndWeather != TimeAndWeatherOption.Reset)
+    //         {
+    //             __instance.SetWeatherOverride(VisualController.currentTimeAndWeather.ToString());
+    //             return false;
+    //         }
+    //         else return true;
+    //     }
+    // }
 }

@@ -23,7 +23,7 @@ namespace UNANIMATED.Gameplay
             float time = currentCommand.Duration;
 
             // Logging
-            UNANIMATED.Logger.LogInfo($"Parsed gameplay command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {time:0} ms");
+            UNANIMATED.Logger.LogInfo($"Parsed gameplay command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {currentCommand.Duration:0} ms");
 
             // Command logic
             switch (type)

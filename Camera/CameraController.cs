@@ -61,7 +61,7 @@ namespace UNANIMATED.CameraControl
             CameraAdditionalOptions additionalOptions = currentCommand.GetEnumParam<CameraAdditionalOptions>(4);
 
             // Logging
-            UNANIMATED.Logger.LogInfo($"Parsed camera command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {time * 1000:0} ms");
+            UNANIMATED.Logger.LogInfo($"Parsed camera command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {currentCommand.Duration:0} ms");
 
 
             // Command logic

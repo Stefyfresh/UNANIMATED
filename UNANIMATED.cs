@@ -32,7 +32,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.23";
+        public const string PLUGIN_VERSION = "0.1.24";
         internal static new ManualLogSource Logger;
 
 
@@ -50,6 +50,7 @@ namespace UNANIMATED
         // Configs
         public static ConfigEntry<bool> enableUNANIMATED;
         public static ConfigEntry<bool> enableSceneSwitching;
+        public static ConfigEntry<bool> enableForcedDefaultStage;
 
 
         // Songs
@@ -73,24 +74,24 @@ namespace UNANIMATED
 
             enableUNANIMATED = Config.Bind(
                 "General",
-                "EnableUNANIMATED",
+                "Enable UNANIMATED",
                 true,
                 "A global toggle to allow UNANIMATED to run on supported custom charts."
             );
 
             enableSceneSwitching = Config.Bind(
                 "General",
-                "EnableSceneSwitching",
+                "Enable Scene Switching",
                 true,
-                "Enables UNANIMATED's scene switching feature. If disabled, it will use the default or currently selected scene.\nScene switching has a memory and performance impact so this is included in case that is not desired."
+                "Enables UNANIMATED's scene switching feature. If disabled, it will use the default or currently selected scene.\nScene switching has a memory, performance, and load time impact so this setting is included in case that is not desired."
             );
 
-            // enableForcedDefaultStage = Config.Bind(
-            //     "General",
-            //     "EnableSceneSwitching",
-            //     true,
-            //     "Enables UNANIMATED's scene switching feature. If disabled, it will use the default or currently selected scene.\nScene switching has a memory and performance impact so this is included in case that is not desired."
-            // );
+            enableForcedDefaultStage = Config.Bind(
+                "General",
+                "Enable Forced Default Stage",
+                true,
+                "If enabled, any charts that include a command to set the default stage will have the custom default stage force enabled whether or not you have selected default stage in your settings."
+            );
 
             // Reload the songs
             enableSceneSwitching.SettingChanged += (s, r) =>
@@ -107,7 +108,7 @@ namespace UNANIMATED
 
     // *Stuff to do when the rhythm scene is first loaded to make the mod work
     [HarmonyPatch(typeof(RhythmController))]
-    [HarmonyPatch("Awake")]
+    [HarmonyPatch(nameof(RhythmController.Awake))]
     internal class ControllerAwakePatch
     {
         static void Postfix(ref RhythmController __instance)
@@ -185,14 +186,16 @@ namespace UNANIMATED
             catch (Exception ex)
             {
                 UNANIMATED.Logger.LogError($"Failed to initialize UNANIMATED! {ex}");
+                UNANIMATED.effectsEnabled = false;
+                UNANIMATED.effectsWereEnabled = false;
             }
         }
     }
 
 
-    // *Stuff to do the rhythm scene is unloaded to reset the mod
+    // *Stuff to do when the rhythm scene is unloaded to reset the mod
     [HarmonyPatch(typeof(RhythmController))]
-    [HarmonyPatch("OnDestroy")]
+    [HarmonyPatch(nameof(RhythmController.OnDestroy))]
     internal class ControllerOnDestroyPatch
     {
         static void Postfix()
@@ -210,6 +213,7 @@ namespace UNANIMATED
             SceneController.Reset();
             UIController.Reset();
             VisualController.Reset();
+            NOISZStageController.Reset();
         }
     }
 
@@ -217,7 +221,7 @@ namespace UNANIMATED
 
     // *Global command parsing code loop
     [HarmonyPatch(typeof(RhythmController))]
-    [HarmonyPatch("UpdateCommands")]
+    [HarmonyPatch(nameof(RhythmController.UpdateCommands))]
     internal class UpdateCommandsPatch
     {
         static void Postfix(ref RhythmController __instance)

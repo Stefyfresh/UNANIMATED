@@ -149,7 +149,7 @@ namespace UNANIMATED.UI
             float time = currentCommand.Duration / 1000f;
 
             // Logging
-            UNANIMATED.Logger.LogInfo($"Parsed UI command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {time:0} ms");
+            UNANIMATED.Logger.LogInfo($"Parsed UI command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {currentCommand.Duration:0} ms");
 
             // Command logic
             switch (type)

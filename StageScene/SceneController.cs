@@ -10,6 +10,8 @@ using Arcade.Unlockables;
 using Effects.RhythmGameSpecific;
 using Cinemachine;
 using UnityEngine.Video;
+using UNANIMATED.Visuals;
+using Overworld;
 
 namespace UNANIMATED.StageScene
 {
@@ -135,11 +137,15 @@ namespace UNANIMATED.StageScene
                 Scene loadedScene = SceneManager.GetSceneByName(sceneName);
                 if (loadedScene.IsValid())
                 {
+                    // Set scene active
                     SceneManager.SetActiveScene(loadedScene);
 
+                    // Build the default weather for this scene
+                    VisualController.SetSceneDefaultWeather(sceneName);
+
+                    // Get GameObjects
                     GameObject[] rootObjects = loadedScene.GetRootGameObjects();
                     GameObject newRootObject = new GameObject($"UNANIMATED {sceneName} Root");
-
 
                     for (int i = 0; i < rootObjects.Count(); i++)
                     {
@@ -203,7 +209,6 @@ namespace UNANIMATED.StageScene
                     // Set and store the root object
                     newRootObject.SetActive(isStartingScene);
                     sceneRootObjects.TryAdd(sceneName, newRootObject);
-
 
                     UNANIMATED.Logger.LogInfo($"Preloaded scene {sceneName}!");
 
@@ -328,6 +333,9 @@ namespace UNANIMATED.StageScene
                     // Set active scene
                     SceneManager.SetActiveScene(sceneToSwitch);
                     // UNANIMATED.Logger.LogInfo($"Switching stage scene to {sceneName}.");
+
+                    // Fix weather
+                    VisualController.FixTimeAndWeatherForSceneSwitch();
 
 
                     // Fix NOISZ stage things

@@ -62,7 +62,7 @@ namespace UNANIMATED.Character
             float time = currentCommand.Duration / 1000f;
 
             // Logging
-            UNANIMATED.Logger.LogInfo($"Parsed Character command at {currentCommand.Time} ms: {type} | params {string.Join(", ", currentCommand.Parameters)} | length {time * 1000:0} ms");
+            UNANIMATED.Logger.LogInfo($"Parsed Character command at {currentCommand.Time} ms: {type} | params {string.Join(", ", currentCommand.Parameters)} | length {currentCommand.Duration:0} ms");
 
 
 
