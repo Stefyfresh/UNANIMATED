@@ -49,6 +49,15 @@ namespace UNANIMATED.StageScene
             }
         }
 
+        public static void Reset()
+        {
+            noiszModeOn = false;
+            noiszBGImage = null;
+            succeededPreloading = false;
+            noiszBGObject = null;
+            normalMasksParent = null;
+        }
+
         public static void ManualUpdate(RhythmController controller)
         {
             try
@@ -93,6 +102,8 @@ namespace UNANIMATED.StageScene
                     noiszBGImage = noiszBGObject.GetComponent<Image>();
 
                     UNANIMATED.Logger.LogInfo("Finished NOISZ stage special preloading.");
+
+                    noiszBGObject.SetActive(false);
                     succeededPreloading = true;
                 }
             }
@@ -113,31 +124,35 @@ namespace UNANIMATED.StageScene
                 {
                     if (sceneIsNOISZ)
                     {
+                        RhythmController.Instance.notePrefabGroup.dodgeNotePrefab = noiszSpikePrefab;
                         noiszBGObject.SetActive(true);
 
-                        foreach (DodgeNote spike in RhythmController.Instance.activeNotes.Where(n => n is DodgeNote).Cast<DodgeNote>())
+                        if (RhythmController.Instance.activeNotes != null)
                         {
-                            SpriteRenderer renderer = spike.sprite;
-                            renderer.sprite = noiszSpikePrefab.sprite.sprite;
-                            renderer.color = noiszSpikePrefab.sprite.color;
-                            renderer.transform.localScale = noiszSpikePrefab.sprite.transform.localScale;
+                            foreach (DodgeNote spike in RhythmController.Instance.activeNotes.Where(n => n is DodgeNote).Cast<DodgeNote>())
+                            {
+                                SpriteRenderer renderer = spike.sprite;
+                                renderer.sprite = noiszSpikePrefab.sprite.sprite;
+                                renderer.color = noiszSpikePrefab.sprite.color;
+                                renderer.transform.localScale = noiszSpikePrefab.sprite.transform.localScale;
+                            }
                         }
-
-                        RhythmController.Instance.notePrefabGroup.dodgeNotePrefab = noiszSpikePrefab;
                     }
                     else
                     {
+                        RhythmController.Instance.notePrefabGroup.dodgeNotePrefab = normalSpikePrefab;
                         noiszBGObject.SetActive(false);
 
-                        foreach (DodgeNote spike in RhythmController.Instance.activeNotes.Where(n => n is DodgeNote).Cast<DodgeNote>())
+                        if (RhythmController.Instance.activeNotes != null)
                         {
-                            SpriteRenderer renderer = spike.sprite;
-                            renderer.sprite = normalSpikePrefab.sprite.sprite;
-                            renderer.color = FileStorage.beatmapOptions.dodgeNoteColor;
-                            renderer.transform.localScale = normalSpikePrefab.sprite.transform.localScale;
+                            foreach (DodgeNote spike in RhythmController.Instance.activeNotes.Where(n => n is DodgeNote).Cast<DodgeNote>())
+                            {
+                                SpriteRenderer renderer = spike.sprite;
+                                renderer.sprite = normalSpikePrefab.sprite.sprite;
+                                renderer.color = FileStorage.beatmapOptions.dodgeNoteColor;
+                                renderer.transform.localScale = normalSpikePrefab.sprite.transform.localScale;
+                            }
                         }
-
-                        RhythmController.Instance.notePrefabGroup.dodgeNotePrefab = normalSpikePrefab;
                     }
                 }
             }
