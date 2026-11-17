@@ -30,6 +30,12 @@ This list of features is currently implemented in the mod!
 - Hide or show any UI elements during gameplay
 - And more!
 
+## Usage
+
+If you would like to try out UNANIMATED, the easiest way is to download the UNBEATABLE Standalone Editor from ErikGXDev and enable UNANIMATED support, then try out all the features by playing around with them!
+
+The format is not finalized yet, when it is I will link a guide for the full documentation of the UNANIMATED event format.
+
 ## Configuration
 
 UNANIMATED has a few configuration options that alter how it functions:
@@ -47,12 +53,6 @@ Scene switching has a memory, performance, and chart load time impact, so this s
 
 If enabled, any charts that include a command to set the default stage will have the custom default stage force enabled whether or not you have selected default stage in your base game settings.
 This is useful for keeping the charter's intent intact, but if you do not want this to be enabled you can disable it.
-
-## Usage
-
-If you would like to try out UNANIMATED, the easiest way is to download the UNBEATABLE Standalone Editor from ErikGXDev and enable UNANIMATED support, then try out all the features by playing around with them!
-
-The format is not finalized yet, when it is I will link a guide for the full documentation of the UNANIMATED event format.
 
 ## Planned Features
 
