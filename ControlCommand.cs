@@ -11,6 +11,8 @@ namespace UNANIMATED
         UI,
         Visuals,
         StageScene,
+        Countdown,
+        BackgroundVideo,
 
 
         // !DO NOT USE THESE NAMES

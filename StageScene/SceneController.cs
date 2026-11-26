@@ -31,6 +31,7 @@ namespace UNANIMATED.StageScene
         // State variables
         public static bool preloadingScenes;
         public static List<CommandEventInfo> sceneEvents;
+        public static Scene primaryScene;
 
 
         // Scene swapping variables
@@ -52,6 +53,7 @@ namespace UNANIMATED.StageScene
 
         public static void RunPreloadScenes()
         {
+            primaryScene = SceneManager.GetActiveScene();
             sceneEvents = UNANIMATED.beatmapEvents.Where((e) => e.Command == ControlCommand.StageScene).ToList();
 
             if (sceneEvents != null && sceneEvents.Count() > 0)
@@ -70,7 +72,7 @@ namespace UNANIMATED.StageScene
                     JeffBezosController.canPause = false;
 
                     // Add current scene
-                    sceneEvents.Add(new CommandEventInfo(new EventInfo() { eventParams = [SceneManager.GetActiveScene().name] }));
+                    sceneEvents.Add(new CommandEventInfo(new EventInfo() { eventParams = [primaryScene.name] }));
 
                     // Start tasks
                     UNANIMATED.Instance.StartCoroutine(PreloadScenes());

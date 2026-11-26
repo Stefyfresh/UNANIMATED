@@ -7,6 +7,10 @@ namespace UNANIMATED
         ShowBackgroundVideo,
         DefaultStageScene,
         LegacyCameraUnits,
+        DisableCountdown,
+        CustomCountdown,
+
+        // Not implemented yet
         SingleCameraNotesAreInstant
     }
 }

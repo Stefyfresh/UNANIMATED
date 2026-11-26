@@ -22,6 +22,7 @@ using UNANIMATED.UI;
 using UNANIMATED.StageScene;
 using UNANIMATED.Visuals;
 using BepInEx.Configuration;
+using UNANIMATED.Countdown;
 
 
 namespace UNANIMATED
@@ -32,7 +33,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.25";
+        public const string PLUGIN_VERSION = "0.1.26";
         internal static new ManualLogSource Logger;
 
 
@@ -51,6 +52,10 @@ namespace UNANIMATED
         public static ConfigEntry<bool> enableUNANIMATED;
         public static ConfigEntry<bool> enableSceneSwitching;
         public static ConfigEntry<bool> enableForcedDefaultStage;
+        // public static ConfigEntry<KeyCode> fourKeyLane1Key;
+        // public static ConfigEntry<KeyCode> fourKeyLane2Key;
+        // public static ConfigEntry<KeyCode> fourKeyLane3Key;
+        // public static ConfigEntry<KeyCode> fourKeyLane4Key;
 
 
         // Songs
@@ -58,10 +63,7 @@ namespace UNANIMATED
 
 
         // Instance for getting the GameObject
-        public static UNANIMATED Instance
-        {
-            get; private set;
-        }
+        public static UNANIMATED Instance { get; private set; }
 
         private void Awake()
         {
@@ -93,10 +95,38 @@ namespace UNANIMATED
                 "If enabled, any charts that include a command to set the default stage will have the custom default stage force enabled whether or not you have selected default stage in your settings."
             );
 
+            // fourKeyLane1Key = Config.Bind(
+            //     "Four Key Mode",
+            //     "Lane 1 Key",
+            //     KeyCode.None,
+            //     "This is the key that will be used for lane 1 (the leftmost lane) in four key mode when it is enabled in UNANIMATED."
+            // );
+
+            // fourKeyLane2Key = Config.Bind(
+            //     "Four Key Mode",
+            //     "Lane 2 Key",
+            //     KeyCode.None,
+            //     "This is the key that will be used for lane 2 (the left middle lane) in four key mode when it is enabled in UNANIMATED."
+            // );
+
+            // fourKeyLane3Key = Config.Bind(
+            //     "Four Key Mode",
+            //     "Lane 3 Key",
+            //     KeyCode.None,
+            //     "This is the key that will be used for lane 3 (the right middle lane) in four key mode when it is enabled in UNANIMATED."
+            // );
+
+            // fourKeyLane4Key = Config.Bind(
+            //     "Four Key Mode",
+            //     "Lane 4 Key",
+            //     KeyCode.None,
+            //     "This is the key that will be used for lane 4 (the rightmost lane) in four key mode when it is enabled in UNANIMATED."
+            // );
+
             // Reload the songs
             enableSceneSwitching.SettingChanged += (s, r) =>
             {
-                customUNANIMATEDSongs.ForEach((song) => song.forceStageScene = enableSceneSwitching.Value);
+                customUNANIMATEDSongs.ForEach((song) => song.forceStageScene = enableForcedDefaultStage.Value);
             };
 
             // Initialize Actions
@@ -108,7 +138,7 @@ namespace UNANIMATED
 
     // *Stuff to do when the rhythm scene is first loaded to make the mod work
     [HarmonyPatch(typeof(RhythmController))]
-    [HarmonyPatch(nameof(RhythmController.Awake))]
+    [HarmonyPatch(nameof(RhythmController.InitializeController))]
     internal class ControllerAwakePatch
     {
         static void Postfix(ref RhythmController __instance)
@@ -143,13 +173,37 @@ namespace UNANIMATED
                         UNANIMATED.videoEnabled = false;
 
 
-                        // Check video
-                        foreach (GeneralOptions option in UNANIMATED.events.Where(e => e.Command == ControlCommand.UNANIMATED).Select(e => e.GetEnumParam<GeneralOptions>(0)))
+                        // Check general options
+                        foreach (CommandEventInfo currentCommand in UNANIMATED.beatmapEvents.Where(e => e.Command == ControlCommand.UNANIMATED))
                         {
-                            // Enum.TryParse(str, out GeneralOptions options);
-                            if (option == GeneralOptions.ShowBackgroundVideo) UNANIMATED.videoEnabled = true;
-                        }
+                            GeneralOptions option = currentCommand.GetEnumParam<GeneralOptions>(0);
+                            switch (option)
+                            {
+                                case GeneralOptions.ShowBackgroundVideo:
+                                    UNANIMATED.Logger.LogInfo("Enabled displaying of the background video.");
+                                    UNANIMATED.videoEnabled = true;
+                                    break;
+                                case GeneralOptions.LegacyCameraUnits:
+                                    UNANIMATED.Logger.LogInfo("Using legacy camera units.");
+                                    CameraController.legacyCameraUnit = true;
+                                    break;
+                                case GeneralOptions.DisableCountdown:
+                                    UNANIMATED.Logger.LogInfo("Countdown disabled.");
+                                    CountdownController.disableCountdown = true;
+                                    break;
+                                case GeneralOptions.CustomCountdown:
+                                    if (!CountdownController.disableCountdown)
+                                    {
+                                        UNANIMATED.Logger.LogInfo("Custom countdown enabled.");
+                                        CountdownController.AddCountdown(currentCommand);
+                                    }
+                                    break;
 
+                                case GeneralOptions.SingleCameraNotesAreInstant:
+                                    UNANIMATED.Logger.LogInfo("Using single camera notes are instant.");
+                                    break;
+                            }
+                        }
 
                         // Initialize control classes
                         Character.CharacterController.Init(__instance);
@@ -160,18 +214,6 @@ namespace UNANIMATED
 
                         // Preload scenes if necessary
                         SceneController.RunPreloadScenes();
-
-
-                        // Check legacy camera units
-                        if (UNANIMATED.beatmapEvents.Any(e => e.Command == ControlCommand.UNANIMATED && e.GetEnumParam<GeneralOptions>(0) == GeneralOptions.LegacyCameraUnits))
-                        {
-                            UNANIMATED.Logger.LogInfo("Using legacy camera units.");
-                            CameraController.legacyCameraUnit = true;
-                        }
-                        if (UNANIMATED.beatmapEvents.Any(e => e.Command == ControlCommand.UNANIMATED && e.GetEnumParam<GeneralOptions>(0) == GeneralOptions.SingleCameraNotesAreInstant))
-                        {
-                            UNANIMATED.Logger.LogInfo("Using single camera notes are instant.");
-                        }
 
 
                         // Start up NOISZ controller
@@ -214,6 +256,8 @@ namespace UNANIMATED
             UIController.Reset();
             VisualController.Reset();
             NOISZStageController.Reset();
+            CountdownController.Reset();
+            VideoPlaybackController.Reset();
         }
     }
 
@@ -232,7 +276,17 @@ namespace UNANIMATED
 
             CommandEventInfo currentCommandEvent;
             CommandEventInfo pastCommandEvent = null;
-            while (UNANIMATED.events.Count > 0 && (currentCommandEvent = UNANIMATED.events.Peek()) != null && __instance.songTracker.Position >= currentCommandEvent.startTime)
+
+            // Special case for countdown tick that needs to be ran early
+            float position = __instance.songTracker.Position;
+            if (UNANIMATED.events.Count > 0 && (currentCommandEvent = UNANIMATED.events.TakeWhile(e => e.startTime + CountdownController.countdownOffset < position).FirstOrDefault(e => e.Command == ControlCommand.Countdown)) != null)
+            {
+                CountdownOption countdownOption = currentCommandEvent.GetEnumParam<CountdownOption>(0);
+                if (countdownOption == CountdownOption.Tick || countdownOption == CountdownOption.Count && currentCommandEvent.GetIntParam(1) > 0) CountdownController.PlayCountdownTick();
+            }
+
+            // Command loop
+            while (UNANIMATED.events.Count > 0 && (currentCommandEvent = UNANIMATED.events.Peek()) != null && position >= currentCommandEvent.startTime)
             {
                 try
                 {
@@ -275,6 +329,14 @@ namespace UNANIMATED
                     else if (commandType == ControlCommand.Visuals)
                     {
                         VisualController.ParseCommand(currentCommandEvent);
+                    }
+                    else if (commandType == ControlCommand.Countdown)
+                    {
+                        CountdownController.ParseCommand(currentCommandEvent);
+                    }
+                    else if (commandType == ControlCommand.BackgroundVideo)
+                    {
+                        VideoPlaybackController.ParseCommand(currentCommandEvent);
                     }
                     else
                     {

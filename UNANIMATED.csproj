@@ -53,6 +53,9 @@
     <Reference Include="Cinemachine">
       <HintPath>..\Hints\Cinemachine.dll</HintPath>
     </Reference>
+    <Reference Include="FMODUnity">
+      <HintPath>..\Hints\FMODUnity.dll</HintPath>
+    </Reference>
     <!-- <Reference Include="Rewired_Core" Publicize="true">
       <HintPath>..\Hints\Rewired_Core.dll</HintPath>
     </Reference> -->
