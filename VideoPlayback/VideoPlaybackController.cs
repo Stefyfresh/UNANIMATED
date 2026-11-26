@@ -1,10 +1,22 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Video;
 
 namespace UNANIMATED.VideoPlayback
 {
     public static class VideoPlaybackController
     {
+        public static bool showVideo;
+        public static VideoPlayer player;
+
+
+        public static void Reset()
+        {
+            showVideo = true;
+            player = null;
+        }
+
+
         public static void FixVideoPlayer(GameObject playerGameObject)
         {
             playerGameObject.GetComponent<RawImage>().material = ShaderMaskingController.bgDimMaterial;
@@ -14,19 +26,40 @@ namespace UNANIMATED.VideoPlayback
         }
 
 
-        // RenderTexture currentRT = myRawImage.texture as RenderTexture;
+        public static RenderTexture CreateRenderTexture()
+        {
+            RenderTextureFormat textureFormat = SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBHalf) ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.ARGB32;
+            RenderTexture renderTexture = new RenderTexture(3840, 2160, 32, textureFormat)
+            {
+                useMipMap = false,
+                autoGenerateMips = false,
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp,
+                antiAliasing = 1
+            };
 
-        // if (currentRT != null)
-        // {
-        //     // Release the old texture from graphics memory
-        //     currentRT.Release();
+            return renderTexture;
+        }
 
-        //     // Set new dimensions
-        //     currentRT.width = targetWidth;
-        //     currentRT.height = targetHeight;
 
-        //     // Re-create the texture with new settings
-        //     currentRT.Create();
-        // }
+        public static void ParseCommand(CommandEventInfo currentCommand)
+        {
+            VideoOption type = currentCommand.GetEnumParamForced<VideoOption>(0);
+
+            UNANIMATED.Logger.LogInfo($"Parsed video command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {currentCommand.Duration:0} ms");
+
+            switch (type)
+            {
+                case VideoOption.Hide:
+                    showVideo = false;
+                    break;
+                case VideoOption.Show:
+                    showVideo = true;
+                    break;
+                case VideoOption.AspectRatioMode:
+                    player.aspectRatio = currentCommand.GetEnumParam<VideoAspectRatio>(1);
+                    break;
+            }
+        }
     }
 }
