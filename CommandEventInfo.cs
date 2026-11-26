@@ -24,10 +24,7 @@ namespace UNANIMATED
         }
 
 
-        public bool HasEndTime
-        {
-            get { return eventParams.Count() > 1; }
-        }
+        public bool HasEndTime => eventParams.Count() > 1;
 
         public int EndTime
         {
@@ -38,45 +35,15 @@ namespace UNANIMATED
             }
         }
 
-        public int Duration
-        {
-            get { return HasEndTime ? EndTime - startTime : 0; }
-        }
+        public int Duration => HasEndTime ? EndTime - startTime : 0;
 
-        public string[] Parameters
-        {
-            get { return paramArray; }
-        }
-        public string ParamString
-        {
-            get { return string.Join(", ", Parameters); }
-        }
+        public string[] Parameters => paramArray;
 
-        public int Time
-        {
-            get
-            {
-                return startTime;
-            }
-        }
+        public string ParamString => string.Join(", ", Parameters);
 
-        public ControlCommand Command
-        {
-            get
-            {
-                return Enum.TryParse(eventType, out ControlCommand commandType) ? commandType : ControlCommand.None;
-            }
-        }
+        public int Time => startTime;
 
-        public float GetFloatParam(int index)
-        {
-            return float.TryParse(GetStringParam(index), out float parsed) ? parsed : 0;
-        }
-
-        public float GetIntParam(int index)
-        {
-            return int.TryParse(GetStringParam(index), out int parsed) ? parsed : 0;
-        }
+        public ControlCommand Command => Enum.TryParse(eventType, out ControlCommand commandType) ? commandType : ControlCommand.None;
 
         public string GetStringParam(int index)
         {
@@ -84,6 +51,16 @@ namespace UNANIMATED
             output ??= string.Empty;
             if (output != string.Empty) output = output.Trim();
             return output;
+        }
+
+        public float GetFloatParam(int index)
+        {
+            return float.TryParse(GetStringParam(index), out float parsed) ? parsed : 0;
+        }
+
+        public int GetIntParam(int index)
+        {
+            return int.TryParse(GetStringParam(index), out int parsed) ? parsed : 0;
         }
 
         public bool GetBoolParam(int index, bool defaultValue = false)
@@ -101,6 +78,31 @@ namespace UNANIMATED
         public T GetEnumParam<T>(int index) where T : struct
         {
             return Enum.TryParse(GetStringParam(index), out T parsed) ? parsed : default;
+        }
+
+        public bool TryGetEnumParam<T>(int index, out T parsedEnum) where T : struct
+        {
+            return Enum.TryParse(GetStringParam(index), out parsedEnum);
+        }
+
+        public T GetFlagsEnumParamForced<T>(int index) where T : struct
+        {
+            return Enum.Parse<T>(GetStringParam(index));
+        }
+
+        public T GetFlagsEnumParam<T>(int index) where T : struct
+        {
+            return Enum.TryParse(GetStringParam(index).Replace('|', ',').Replace(';', ','), out T parsed) ? parsed : default;
+        }
+
+        public int[] GetIntArrayParam(int index)
+        {
+            return [.. GetStringParam(index).Split(['|', ';'], StringSplitOptions.RemoveEmptyEntries).Select((str) => int.TryParse(str, out int parsed) ? parsed : 0)];
+        }
+
+        public int[] GetFloatArrayParam(int index)
+        {
+            return [.. GetStringParam(index).Split(['|', ';'], StringSplitOptions.RemoveEmptyEntries).Select((str) => int.TryParse(str, out int parsed) ? parsed : 0)];
         }
 
         public bool CommandsEqual(CommandEventInfo compare)
