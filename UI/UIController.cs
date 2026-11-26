@@ -142,14 +142,14 @@ namespace UNANIMATED.UI
         {
             // Get relevant variables
             UIOption type = currentCommand.GetEnumParamForced<UIOption>(0);
-            bool enabled = currentCommand.GetBoolParam(1, true);
-            Enum.TryParse(currentCommand.GetStringParam(1).Replace('|', ',').Replace(';', ','), out UIType elements);
-            Enum.TryParse(currentCommand.GetStringParam(1).Replace('|', ',').Replace(';', ','), out SlideUIType slideElements);
+            UIType elements = currentCommand.GetFlagsEnumParam<UIType>(1);
+            SlideUIType slideElements = currentCommand.GetFlagsEnumParam<SlideUIType>(1);
 
             float time = currentCommand.Duration / 1000f;
 
             // Logging
             UNANIMATED.Logger.LogInfo($"Parsed UI command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {currentCommand.Duration:0} ms");
+            if (type >= UIOption.Hide && type <= UIOption.SlideOut && elements == default && slideElements == default) UNANIMATED.Logger.LogWarning("No valid UI elements were targeted, defaulting to all. Double check the param string or specify All to target all elements at once.");
 
             // Command logic
             switch (type)
@@ -158,7 +158,7 @@ namespace UNANIMATED.UI
                     Reset();
                     break;
                 case UIOption.ForceLockedUI:
-                    forceLockedUI = enabled;
+                    forceLockedUI = currentCommand.GetBoolParam(1, true);
                     break;
 
                 case UIOption.Show:
@@ -176,12 +176,25 @@ namespace UNANIMATED.UI
                 case UIOption.SlideOut:
                     SetUISlideState(slideElements, false);
                     break;
+
+                case UIOption.Pulse:
+                    RhythmController controller = RhythmController.Instance;
+                    EvenOddMode mode = currentCommand.GetEnumParam<EvenOddMode>(1);
+                    if (controller)
+                    {
+                        controller.song.isBeat = true;
+                        controller.song.evenBeat = mode == EvenOddMode.Both || mode == EvenOddMode.Even;
+                        controller.song.oddBeat = mode == EvenOddMode.Both || mode == EvenOddMode.Odd;
+                    }
+                    break;
             }
         }
 
 
         private static void SetUIState(UIType elements, float time, bool enabled)
         {
+            if (elements == default) elements = UIType.All;
+
             foreach (UIType uiType in Enum.GetValues(typeof(UIType)))
             {
                 if (elements.HasFlag(uiType))
@@ -207,6 +220,8 @@ namespace UNANIMATED.UI
 
         private static void SetUISlideState(SlideUIType elements, bool enabled)
         {
+            if (elements == default) elements = SlideUIType.All;
+
             foreach (SlideUIType uiType in Enum.GetValues(typeof(SlideUIType)))
             {
                 if (elements.HasFlag(uiType))

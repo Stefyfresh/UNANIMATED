@@ -5,6 +5,7 @@ namespace UNANIMATED.UI
     [Flags]
     public enum UIType
     {
+        None = 0,
         Score = 1,
         Accuracy = 2,
         MaxCombo = 4,
@@ -19,5 +20,6 @@ namespace UNANIMATED.UI
         UpNextIndicators = 2048,
         Reticle = 4096,
         Notes = 8192,
+        All = 16383,
     }
 }

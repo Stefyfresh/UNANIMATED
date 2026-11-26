@@ -5,6 +5,7 @@ namespace UNANIMATED.UI
     [Flags]
     public enum SlideUIType
     {
+        None = 0,
         AllOverlayUI = 1,
         LeftJudgementLine = 2,
         RightJudgementLine = 4,
@@ -13,5 +14,6 @@ namespace UNANIMATED.UI
         SpeedLines = 32,
         FourByThreeBars = 64,
         BlackBGBars = 128,
+        All = 255,
     }
 }

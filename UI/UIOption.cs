@@ -8,5 +8,6 @@ namespace UNANIMATED.UI
         Show,
         SlideIn,
         SlideOut,
+        Pulse,
     }
 }
