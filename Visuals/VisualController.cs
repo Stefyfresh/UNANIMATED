@@ -25,11 +25,14 @@ namespace UNANIMATED.Visuals
         // Day Night Weather stuff
         public static List<DayNightSystem> dayNightSystems = [];
         public static Dictionary<string, Weather> sceneDefaultWeather = [];
+        public static Dictionary<string, Light> sceneSuns = [];
         public static DayNightSystem masterDayNightSystem;
+        public static Light masterSun;
 
         // States
         public static bool isInverted;
         public static TimeAndWeatherOption currentTimeAndWeather;
+        public static float currentCloudRotation;
 
         public static void Init(RhythmController controller)
         {
@@ -55,7 +58,10 @@ namespace UNANIMATED.Visuals
                 DayNightSystem dreamReflectionDayNight = dayNightSystems.FirstOrDefault(dayNight => dayNight.gameObject.scene.name == "DreamReflection");
 
                 if (dreamReflectionDayNight) masterDayNightSystem = Object.Instantiate(dreamReflectionDayNight);
-                masterDayNightSystem = Object.Instantiate(dayNightSystems.First());
+                else masterDayNightSystem = Object.Instantiate(dayNightSystems.First());
+
+                masterSun = masterDayNightSystem.GetComponent<Light>();
+                // if (sun) sun.enabled = false;
 
                 masterDayNightSystem.gameObject.name = "UNANIMATED Master DayNightSystem";
                 SetTimeAndWeather(TimeAndWeatherOption.Reset, 0);
@@ -70,6 +76,7 @@ namespace UNANIMATED.Visuals
             sceneDefaultWeather = [];
             masterDayNightSystem = null;
             currentTimeAndWeather = TimeAndWeatherOption.Reset;
+            currentCloudRotation = 0;
         }
 
         public static void ParseCommand(CommandEventInfo currentCommand)
@@ -91,6 +98,9 @@ namespace UNANIMATED.Visuals
                 case VisualOption.TimeAndWeather:
                     SetTimeAndWeather(currentCommand.GetEnumParamForced<TimeAndWeatherOption>(1), time);
                     break;
+                case VisualOption.CloudRotation:
+                    SetCloudRotation(currentCommand.GetFloatParam(1), time);
+                    break;
 
 
                     // case VisualOption.Invert:
@@ -111,6 +121,7 @@ namespace UNANIMATED.Visuals
                     weather.color = RenderSettings.sun.color;
                     weather.intensity = RenderSettings.sun.intensity;
                     weather.orientation = RenderSettings.sun.transform.eulerAngles;
+                    sceneSuns.TryAdd(sceneName, RenderSettings.sun);
                 }
 
                 weather.skybox = RenderSettings.skybox;
@@ -139,20 +150,23 @@ namespace UNANIMATED.Visuals
 
             if (dayNightSystemInCurrentScene)
             {
+                masterSun.enabled = false;
                 SetTimeAndWeatherInternal(dayNightSystemInCurrentScene, mode, duration, sceneName);
             }
             else if (masterDayNightSystem)
             {
-                SetTimeAndWeatherInternal(masterDayNightSystem, mode, duration, sceneName);
+                if (mode == TimeAndWeatherOption.Reset) masterSun.enabled = false;
+                else masterSun.enabled = true;
+                SetTimeAndWeatherInternal(masterDayNightSystem, mode, duration, sceneName, masterSun);
             }
 
             currentTimeAndWeather = mode;
         }
 
 
-        private static void SetTimeAndWeatherInternal(DayNightSystem dayNight, TimeAndWeatherOption mode, float duration, string sceneName)
+        private static void SetTimeAndWeatherInternal(DayNightSystem dayNight, TimeAndWeatherOption mode, float duration, string sceneName, Light sun = null)
         {
-            dayNight.StopAllCoroutines();
+            if (DayNightSystemExtension.weatherCoroutine != null) dayNight.StopCoroutine(DayNightSystemExtension.weatherCoroutine);
 
             int currentDay = dayNight.previewDay;
             int currentTime = dayNight.previewTime;
@@ -163,13 +177,15 @@ namespace UNANIMATED.Visuals
                 {
                     if (sceneDefaultWeather.TryGetValue(sceneName, out Weather defaultWeather))
                     {
-                        dayNight.SetWeatherOverride(defaultWeather);
+                        if (!sun) sceneSuns.TryGetValue(sceneName, out sun);
+                        dayNight.SetWeatherOverride(defaultWeather, sun);
                     }
                     else dayNight.UpdateDayTimeSettings(true);
                 }
                 else
                 {
-                    dayNight.SetWeatherOverride(mode.ToString());
+                    if (!sun) sceneSuns.TryGetValue(sceneName, out sun);
+                    dayNight.SetWeatherOverride(mode.ToString(), sun);
                 }
             }
             else
@@ -181,11 +197,31 @@ namespace UNANIMATED.Visuals
                 if (mode == TimeAndWeatherOption.Reset) newWeather = dayNight.days[day].timeSlots[time].weather;
                 if (currentTimeAndWeather == TimeAndWeatherOption.Reset) prevWeather = dayNight.days[day].timeSlots[time].weather;
 
-                dayNight.SetWeatherOverrideLerp(newWeather, prevWeather, duration);
+                if (!sun) sceneSuns.TryGetValue(sceneName, out sun);
+                dayNight.SetWeatherOverrideLerp(newWeather, prevWeather, duration, sun);
             }
 
             dayNight.previewDay = currentDay;
             dayNight.previewTime = currentTime;
+        }
+
+
+        private static void SetCloudRotation(float rotation, float duration)
+        {
+            Scene activeScene = SceneManager.GetActiveScene();
+            string sceneName = activeScene.name;
+
+            // If there is a DayNightSystem in the current scene, only use that
+            DayNightSystem dayNight = dayNightSystems.FirstOrDefault(dayNight => dayNight.gameObject.scene == activeScene && dayNight.isActiveAndEnabled) ?? masterDayNightSystem;
+            if (dayNight)
+            {
+                if (DayNightSystemExtension.cloudRotationCoroutine != null) dayNight.StopCoroutine(DayNightSystemExtension.cloudRotationCoroutine);
+
+                if (duration > 0) dayNight.SetCloudRotationLerp(currentCloudRotation, rotation, duration);
+                else dayNight.SetCloudRotation(rotation);
+            }
+
+            currentCloudRotation = rotation;
         }
     }
 }

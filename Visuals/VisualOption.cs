@@ -4,6 +4,7 @@ namespace UNANIMATED.Visuals
     {
         Reset,
         TimeAndWeather,
+        CloudRotation,
         // Invert,
     }
 }
