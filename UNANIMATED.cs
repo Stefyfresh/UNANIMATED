@@ -33,7 +33,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.26";
+        public const string PLUGIN_VERSION = "0.1.27";
         internal static new ManualLogSource Logger;
 
 
@@ -350,7 +350,8 @@ namespace UNANIMATED
                 }
             }
 
-            if (UNANIMATED.effectsEnabled && UNANIMATED.enableSceneSwitching.Value && NOISZStageController.succeededPreloading) NOISZStageController.ManualUpdate(__instance);
+            if (UNANIMATED.enableSceneSwitching.Value && NOISZStageController.succeededPreloading) NOISZStageController.ManualUpdate(__instance);
+            Character.CharacterController.ManualUpdate(__instance);
         }
     }
 }
