@@ -12,6 +12,7 @@ using Cinemachine;
 using UnityEngine.Video;
 using UNANIMATED.Visuals;
 using Overworld;
+using Effects;
 
 namespace UNANIMATED.StageScene
 {
@@ -44,8 +45,6 @@ namespace UNANIMATED.StageScene
         public static Dictionary<string, GameObject> sceneMaskCameraObjects = [];
         public static Dictionary<string, GameObject> sceneMainCameraObjects = [];
         public static RenderTexture maskCamTexture;
-        // public static Dictionary<string, GameObject[]> sceneObjectsToDisable = [];
-        // public static Dictionary<string, GameObject[]> sceneObjectsToEnable = [];
 
         // Actions
         public static Action onScenePreloadComplete;
@@ -305,6 +304,21 @@ namespace UNANIMATED.StageScene
                     // Move objects
                     if (rhythmGameTransforms.TryGetValue(sceneName, out Transform target))
                     {
+                        // Move active effects
+                        if (EffectsController.Instance != null)
+                        {
+                            foreach (ValueTuple<string, EffectsController.EffectInstance> activeEffect in EffectsController.Instance._activeEffects)
+                            {
+                                // Get relative position of effect to current controller
+                                Vector3 position = activeEffect.Item2._transform.position;
+                                Vector3 relativePosition = rhythmGameContainer.transform.worldToLocalMatrix * new Vector4(position.x, position.y, position.z, 1);
+
+                                // Change position to new controller position
+                                Vector3 newPosition = target.localToWorldMatrix * new Vector4(relativePosition.x, relativePosition.y, relativePosition.z, 1);
+                                activeEffect.Item2._transform.position = newPosition;
+                                activeEffect.Item2._transform.localEulerAngles = activeEffect.Item2._transform.localEulerAngles + target.localEulerAngles - rhythmGameContainer.transform.localEulerAngles;
+                            }
+                        }
                         // move rhythm game container
                         if (rhythmGameContainer != null)
                         {
