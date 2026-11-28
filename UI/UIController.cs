@@ -14,20 +14,6 @@ namespace UNANIMATED.UI
     public static class UIController
     {
         // GameObjects
-        // public static Graphic score;
-        // public static Graphic[] accuracy;
-        // public static Graphic maxCombo;
-        // public static Graphic[] vignetteBars;
-        // public static Graphic[] blackBGBars;
-        // public static Graphic[] fourByThreeBars;
-        // public static Graphic health;
-        // public static Graphic[] JudgementLine;
-        // public static Graphic judgements;
-        // public static GameObject measureBars;
-        // public static Graphic speedLines;
-        // public static Graphic upNextIndicators;
-        // public static Graphic reticle;
-        // public static Graphic[] notes;
         public static Dictionary<UIType, List<Renderer>> uiElementRenderers = [];
         public static Dictionary<UIType, List<GameObject>> uiElementObjects = [];
         public static Dictionary<UIType, List<Graphic>> uiElementGraphics = [];
@@ -89,9 +75,6 @@ namespace UNANIMATED.UI
             uiElementObjects.TryAdd(UIType.Health, [trans.GetComponentInChildren<RhythmHealthDisplay>(true)?.gameObject]);
 
             // Judgement line
-            // List<Renderer> judgementLine = [];
-            // judgementLine.AddRange(trans.Find("Left Guide")?.GetComponentsInChildren<Renderer>());
-            // judgementLine.AddRange(trans.Find("Right Guide")?.GetComponentsInChildren<Renderer>());
             uiElementRenderers.TryAdd(UIType.LeftJudgementLine, trans.Find("Left Guide")?.GetComponentsInChildren<Renderer>().ToList());
             uiElementRenderers.TryAdd(UIType.RightJudgementLine, trans.Find("Right Guide")?.GetComponentsInChildren<Renderer>().ToList());
 
@@ -124,6 +107,9 @@ namespace UNANIMATED.UI
 
             // Notes
             uiElementObjects.TryAdd(UIType.Notes, [controller.noteGroup]);
+
+            // Judgements
+            uiElementObjects.TryAdd(UIType.Judgements, [trans.GetComponentInChildren<BackgroundAccuracyDisplayboard>()?.gameObject]);
         }
 
         public static void Reset()

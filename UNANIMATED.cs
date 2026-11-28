@@ -33,7 +33,7 @@ namespace UNANIMATED
     {
         public const string PLUGIN_GUID = "com.stefyfresh.UNANIMATED";
         public const string PLUGIN_NAME = "Stefyfresh's UNANIMATED";
-        public const string PLUGIN_VERSION = "0.1.27";
+        public const string PLUGIN_VERSION = "0.1.28";
         internal static new ManualLogSource Logger;
 
 
@@ -271,7 +271,7 @@ namespace UNANIMATED
         static void Postfix(ref RhythmController __instance)
         {
             // Return if not enabled
-            if (!UNANIMATED.effectsEnabled) return;
+            if (!UNANIMATED.effectsEnabled || !__instance) return;
 
 
             CommandEventInfo currentCommandEvent;
@@ -282,7 +282,7 @@ namespace UNANIMATED
             if (UNANIMATED.events.Count > 0 && (currentCommandEvent = UNANIMATED.events.TakeWhile(e => e.startTime + CountdownController.countdownOffset < position).FirstOrDefault(e => e.Command == ControlCommand.Countdown)) != null)
             {
                 CountdownOption countdownOption = currentCommandEvent.GetEnumParam<CountdownOption>(0);
-                if (countdownOption == CountdownOption.Tick || countdownOption == CountdownOption.Count && currentCommandEvent.GetIntParam(1) > 0) CountdownController.PlayCountdownTick();
+                if ((countdownOption == CountdownOption.Tick || countdownOption == CountdownOption.Count) && currentCommandEvent.GetIntParam(1) > 0) CountdownController.PlayCountdownTick();
             }
 
             // Command loop
@@ -350,8 +350,16 @@ namespace UNANIMATED
                 }
             }
 
-            if (UNANIMATED.enableSceneSwitching.Value && NOISZStageController.succeededPreloading) NOISZStageController.ManualUpdate(__instance);
-            Character.CharacterController.ManualUpdate(__instance);
+            try
+            {
+                if (UNANIMATED.enableSceneSwitching.Value && NOISZStageController.succeededPreloading) NOISZStageController.ManualUpdate(__instance);
+                Character.CharacterController.ManualUpdate(__instance);
+            }
+            catch (Exception ex)
+            {
+                UNANIMATED.Logger.LogWarning($"Failed to run script updates! {ex.Message}");
+                // UNANIMATED.Logger.LogWarning($"{ex.StackTrace}");
+            }
         }
     }
 }

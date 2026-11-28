@@ -37,42 +37,45 @@ namespace UNANIMATED.Character
 
         public static void ManualUpdate(RhythmController controller)
         {
+            if (!spawner) return;
+
             SpriteRenderer renderer;
             Color colour;
 
             // Set colours
-            renderer = spawner.BGCharL.GetComponentInChildren<SpriteRenderer>();
+            renderer = spawner.BGCharL?.GetComponentInChildren<SpriteRenderer>();
             if (renderer && bgCharacterColours.TryGetValue(BGCharacter.Left, out colour)) renderer.color = colour;
 
-            renderer = spawner.BGCharML.GetComponentInChildren<SpriteRenderer>();
+            renderer = spawner.BGCharML?.GetComponentInChildren<SpriteRenderer>();
             if (renderer && bgCharacterColours.TryGetValue(BGCharacter.LeftMiddle, out colour)) renderer.color = colour;
 
-            renderer = spawner.BGCharM.GetComponentInChildren<SpriteRenderer>();
+            renderer = spawner.BGCharM?.GetComponentInChildren<SpriteRenderer>();
             if (renderer && bgCharacterColours.TryGetValue(BGCharacter.Middle, out colour)) renderer.color = colour;
 
-            renderer = spawner.BGCharMR.GetComponentInChildren<SpriteRenderer>();
+            renderer = spawner.BGCharMR?.GetComponentInChildren<SpriteRenderer>();
             if (renderer && bgCharacterColours.TryGetValue(BGCharacter.RightMiddle, out colour)) renderer.color = colour;
 
-            renderer = spawner.BGCharR.GetComponentInChildren<SpriteRenderer>();
+            renderer = spawner.BGCharR?.GetComponentInChildren<SpriteRenderer>();
             if (renderer && bgCharacterColours.TryGetValue(BGCharacter.Right, out colour)) renderer.color = colour;
 
-
-            controller.player.assist.sprite.enabled = !disableAssist;
-
-
-            controller.player.sprite.color = primaryCharacterColour;
-            TrailRenderer trail = controller.player.GetComponentInChildren<TrailRenderer>();
-            if (trail)
+            if (controller.player && controller.player.assist)
             {
-                Gradient gradient = trail.colorGradient;
+                controller.player.assist.sprite.enabled = !disableAssist;
 
-                GradientAlphaKey[] keys = gradient.alphaKeys;
-                keys[0] = new GradientAlphaKey(0, keys[0].time);
-                keys[1] = new GradientAlphaKey(primaryCharacterColour.a, keys[1].time);
-                keys[2] = new GradientAlphaKey(primaryCharacterColour.a, keys[2].time);
-                gradient.alphaKeys = keys;
+                controller.player.sprite.color = primaryCharacterColour;
+                TrailRenderer trail = controller.player.GetComponentInChildren<TrailRenderer>();
+                if (trail)
+                {
+                    Gradient gradient = trail.colorGradient;
 
-                trail.colorGradient = gradient;
+                    GradientAlphaKey[] keys = gradient.alphaKeys;
+                    keys[0] = new GradientAlphaKey(0, keys[0].time);
+                    keys[1] = new GradientAlphaKey(primaryCharacterColour.a, keys[1].time);
+                    keys[2] = new GradientAlphaKey(primaryCharacterColour.a, keys[2].time);
+                    gradient.alphaKeys = keys;
+
+                    trail.colorGradient = gradient;
+                }
             }
         }
 

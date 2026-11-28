@@ -69,11 +69,18 @@ namespace UNANIMATED.Countdown
             // Logging
             UNANIMATED.Logger.LogInfo($"Parsed countdown command at {currentCommand.Time} ms: {type} | params {currentCommand.ParamString} | length {currentCommand.Duration:0} ms");
 
+            // Enable custom countdowns
+            customCountdownEnabled = true;
+
             // Disable the other code so we don't override it
             disableCountdown = true;
 
             // Set the parameters
-            if (type == CountdownOption.Tick && currentCountdownBeat > 0) PlayCountdownTick();
+            if (type == CountdownOption.Tick && currentCountdownBeat > 0)
+            {
+                PlayCountdownTick();
+                playedTick = false;
+            }
             else if (type == CountdownOption.Count || type == CountdownOption.Display)
             {
                 if (time == 0) countdownBeatLength = float.MaxValue;

@@ -20,6 +20,7 @@ namespace UNANIMATED.UI
         UpNextIndicators = 2048,
         Reticle = 4096,
         Notes = 8192,
-        All = 16383,
+        Judgements = 16384,
+        All = 32767,
     }
 }

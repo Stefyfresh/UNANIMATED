@@ -73,8 +73,10 @@ namespace UNANIMATED.Visuals
         {
             isInverted = false;
             dayNightSystems = [];
+            sceneSuns = [];
             sceneDefaultWeather = [];
             masterDayNightSystem = null;
+            masterSun = null;
             currentTimeAndWeather = TimeAndWeatherOption.Reset;
             currentCloudRotation = 0;
         }

@@ -13,6 +13,8 @@ namespace UNANIMATED.Countdown
     {
         static bool Prefix(ref RhythmController __instance, ref bool countdownOn)
         {
+            CountdownController.countdownTick = __instance.countdownStick;
+
             if (CountdownController.disableCountdown)
             {
                 // Disable base game countdown
@@ -32,9 +34,7 @@ namespace UNANIMATED.Countdown
                 // Add custom countdown
                 __instance.songTracker.countdown = null;
                 __instance.song.countdownBeatLength = CountdownController.countdownBeatLength;
-                CountdownController.countdownTick = __instance.countdownStick;
             }
-
             return true;
         }
     }

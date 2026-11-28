@@ -12,8 +12,16 @@ namespace UNANIMATED.VideoPlayback
 
         public static void Reset()
         {
+            if (player.targetTexture)
+            {
+                RenderTexture renderTexture = player.targetTexture;
+                renderTexture.Release();
+                Object.Destroy(renderTexture);
+            }
+
             showVideo = true;
             player = null;
+
         }
 
 
